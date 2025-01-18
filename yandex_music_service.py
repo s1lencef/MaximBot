@@ -8,7 +8,7 @@ class YandexMusicService():
         self.client.init();
     def get_tracks(self, query):
         result = self.client.search(query)
-        labels_tracks = {"Imixes":[],"Rumedia":[],"Unknown":[]}
+        labels_tracks = {"Rumedia":[],"Imixes":[],"Unknown":[]}
         if(result.artists):
             id = None
             for artist in result.artists.results:
