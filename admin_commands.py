@@ -5,7 +5,7 @@ from core import *
 from models import *
 from config import *
 from menu import *
-from telegramBot.core import checkadmin
+from core import checkadmin
 from yandex_music_service import *
 async def reg_admin(update,context):
     reply_markup = None
