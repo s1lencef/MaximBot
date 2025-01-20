@@ -246,7 +246,7 @@ async def btn_handler(update, context):
                 reply_markup = InlineKeyboardMarkup(menu)
                 service = YandexMusicService()
                 tracks = service.get_artist_tracks(int(args[2]))
-
+                print(tracks.keys())
                 result = modify_result(tracks)
 
 
@@ -559,14 +559,17 @@ async def get_tracks(update, context, artist_name):
 
 
 def modify_result(tracks):
+    total = "total"
     delimeter = ",\n"
     answ = ""
-    for k in tracks.keys():
-        temp = delimeter.join(tracks[k])
+    for k in list(tracks.keys())[0:-1]:
+        temp = delimeter.join(tracks[k]["tracks"])
         if temp:
-            answ += f"<b><i>{k}</i></b>\n{temp}\n\n"
+            answ += f"<b><i>{k}</i></b>\n{temp}\n<u><i>Всего: {tracks[k][total]}</i></u>\n\n"
         else:
             answ += f"<b><i>{k}</i></b>\nТреки отсуствуют\n\n"
+    answ+= f"<u><i>Всего: {tracks[total]}</i></u>"
+
     return answ
 
 
