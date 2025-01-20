@@ -24,7 +24,7 @@ conv_handler = ConversationHandler(
         8:[MessageHandler(filters.TEXT & ~filters.COMMAND,add_points)],
         9:[MessageHandler(filters.TEXT & ~filters.COMMAND,remove_points)],
         10:[MessageHandler(filters.Regex("\d")& ~filters.COMMAND,ban_user)],
-        11:[MessageHandler(filters.TEXT & ~filters.COMMAND,get_tracks_conv)]
+        11:[MessageHandler(filters.TEXT & ~filters.COMMAND,get_artists_conv)]
     },
     fallbacks=[CommandHandler("cancel", cancel),CallbackQueryHandler(btn_handler)],
 )
