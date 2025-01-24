@@ -23,7 +23,6 @@ async def reg_admin(update, context):
 
                 user = User.get(id)
 
-
                 if user.role == Role.get(1):
                     message = "Вы уже зарегистрированны!"
                 else:
@@ -154,7 +153,6 @@ async def btn_handler(update, context):
                     return 3
     elif args[0] == "users":
         if args[1] == "delete_user":
-
             await query.edit_message_text(text="Введите id пользователя:", reply_markup=cancel_reply_markup,
                                           parse_mode=ParseMode.HTML)
             return 4
@@ -248,7 +246,6 @@ async def btn_handler(update, context):
                 tracks = service.get_artist_tracks(int(args[2]))
                 print(tracks.keys())
                 result = modify_result(tracks)
-
 
                 await query.edit_message_text(text=result, parse_mode=ParseMode.HTML, reply_markup=reply_markup)
             except Exception as e:
@@ -568,7 +565,7 @@ def modify_result(tracks):
             answ += f"<b><i>{k}</i></b>\n{temp}\n<u><i>Всего: {tracks[k][total]}</i></u>\n\n"
         else:
             answ += f"<b><i>{k}</i></b>\nТреки отсуствуют\n\n"
-    answ+= f"<u><i>Всего: {tracks[total]}</i></u>"
+    answ += f"<u><i>Всего: {tracks[total]}</i></u>"
 
     return answ
 
@@ -618,7 +615,7 @@ async def get_artist(update, artist_name):
         for artist in artists:
             text += str(i) + ". " + artist.get_uri() + "\n"
             buttons.append(InlineKeyboardButton(str(i) + ". " + artist.name,
-                                                callback_data="artists#" + artist.name  +"#"+ str(artist.id)))
+                                                callback_data="artists#" + artist.name + "#" + str(artist.id)))
             i += 1
 
         menu = build_menu(buttons, 2, footer_buttons=[
@@ -630,6 +627,7 @@ async def get_artist(update, artist_name):
 
     except Exception as e:
         await update.message.reply_text(e.__str__())
+
 
 async def get_artist_query(query, artist_name):
     service = YandexMusicService()
@@ -643,7 +641,7 @@ async def get_artist_query(query, artist_name):
         for artist in artists:
             text += str(i) + ". " + artist.get_uri() + "\n"
             buttons.append(InlineKeyboardButton(str(i) + ". " + artist.name,
-                                                callback_data="artists#" + artist.name +"#"+ str(artist.id)))
+                                                callback_data="artists#" + artist.name + "#" + str(artist.id)))
             i += 1
 
         menu = build_menu(buttons, 2, footer_buttons=[
@@ -672,3 +670,36 @@ async def get_artists_command(update, context):
         await get_artist(update, context.args[0])
     else:
         await update.message.reply_text("Вы не ввели имя артиста")
+
+
+async def get_statistics_main_menu(update, context):
+    artist_name = update.message.text
+    try:
+        artist = ArtistModel.get(ArtistModel.name == artist_name)
+    except ArtistModel.DoesNotExist:
+        artist = ArtistModel(name=artist_name)
+        try:
+            artist.save()
+        except Exception as e:
+            await update.message.reply_text(e.__str__())
+            return ConversationHandler.END
+    context.user_data["artist_id"] = artist.id
+    await update.message.reply_text("Выберите действие", reply_markup=get_menu('statistics').reply_markup)
+    print(12)
+    return 12
+
+
+async def choose_statistics(update, context):
+    print("12 active")
+    print(context.user_data["artist_id"])
+    if context.user_data["artist_id"]:
+        artist = context.user_data["artist_id"]
+        if "Посмотреть статистику" in update.message.text:
+            await update.message.reply_text(f"Просмотр статистики пользователя: {artist}")
+            return 13
+        elif "Внести данные о статистике" in update.message.text:
+            await update.message.reply_text(f"Изменение статистики пользователя: {artist}")
+            return 13
+        else:
+            await update.message.reply_text(f"ты еблан?", reply_markup=get_menu('admin_global').reply_markup)
+            return ConversationHandler.END

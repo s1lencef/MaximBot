@@ -95,7 +95,6 @@ class YandexMusicService():
             raise RuntimeError("Треков не обнаружено")
 
         for track in tracks.tracks:
-            print(len(tracks.tracks))
             print(track)
             if not track:
                 continue

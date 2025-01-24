@@ -15,7 +15,7 @@ from telegram.ext import (
 from user_commands import *
 from admin_commands import *
 from config import token
-from conversation import conv_handler
+from conversation import *
 
 
 logging.basicConfig(
@@ -36,7 +36,9 @@ def main():
     app.add_handler(CommandHandler("profile", get_profile))
     app.add_handler(MessageHandler(filters.Regex("Профиль"), get_profile))
     app.add_handler(MessageHandler(filters.Regex("Связаться с менеджером"), call_maxim))
-    app.add_handler(conv_handler)
+    app.add_handler(conv_sys_handler)
+    app.add_handler(conv_tracks_handler)
+    app.add_handler(conv_statistics_handler)
     app.add_handler(CommandHandler("admin", reg_admin))
     app.add_handler(CommandHandler("user", user))
     app.add_handler(MessageHandler(filters.Regex("Настроить данные приложения"), change_loyalty))
