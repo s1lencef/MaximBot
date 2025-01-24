@@ -29,7 +29,7 @@ conv_sys_handler = ConversationHandler(
 conv_tracks_handler = ConversationHandler(
     entry_points=[CallbackQueryHandler(btn_handler), MessageHandler(filters.Regex("Поиск треков"), get_artist_name)],
     states={
-        11: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_artists_conv)]
+        1: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_artists_conv)]
     },
     fallbacks=[CommandHandler("cancel", cancel), CallbackQueryHandler(btn_handler)],
 )
@@ -37,9 +37,11 @@ conv_tracks_handler = ConversationHandler(
 conv_statistics_handler = ConversationHandler(
     entry_points=[CallbackQueryHandler(btn_handler), MessageHandler(filters.Regex("Статистика"), get_artist_name)],
     states={
-        11: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_statistics_main_menu)],
-        12: [MessageHandler(filters.TEXT & ~filters.COMMAND, choose_statistics)],
+        1: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_statistics_main_menu)],
+        2: [MessageHandler(filters.TEXT & ~filters.COMMAND, choose_statistics)],
+        3: [MessageHandler(filters.TEXT & ~filters.COMMAND, show_statistics)],
+        4: [MessageHandler(filters.TEXT & ~filters.COMMAND, change_statistics)]
     },
-    fallbacks=[CommandHandler("cancel", cancel), CallbackQueryHandler(btn_handler)],
+    fallbacks=[CommandHandler("cancel", cancel), CallbackQueryHandler(btn_handler)]
 
 )

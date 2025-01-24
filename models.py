@@ -40,7 +40,7 @@ class Statistics(BaseModel):
     artist_id = ForeignKeyField(ArtistModel, null=False, on_update='cascade')
     year = IntegerField(default=datetime.now().year)
     quarter = IntegerField(constraints=[Check('quarter >= 1'), Check('quarter <= 4')])
-    state = IntegerField(constraints=[Check('quarter >= 0'), Check('quarter <= 2')], default=0)
+    state = IntegerField(constraints=[Check('state >= 0'), Check('state <= 2')], default=0)
 
 
 DB.create_tables([Role, Loyalty_level, User,ArtistModel, Statistics])

@@ -7,7 +7,7 @@ from config import *
 from menu import *
 from core import checkadmin
 from yandex_music_service import *
-
+from prettytable import PrettyTable
 
 async def reg_admin(update, context):
     reply_markup = None
@@ -577,7 +577,7 @@ async def get_artist_name(update, context):
         await update.message.reply_text(e.__str__())
         return ConversationHandler.END
     await update.message.reply_text("Введите имя артиста")
-    return 11
+    return 1
 
 
 async def get_tracks_conv(update, context):
@@ -685,21 +685,65 @@ async def get_statistics_main_menu(update, context):
             return ConversationHandler.END
     context.user_data["artist_id"] = artist.id
     await update.message.reply_text("Выберите действие", reply_markup=get_menu('statistics').reply_markup)
-    print(12)
-    return 12
+    return 2
 
 
 async def choose_statistics(update, context):
     print("12 active")
     print(context.user_data["artist_id"])
     if context.user_data["artist_id"]:
-        artist = context.user_data["artist_id"]
+        artist_id = context.user_data["artist_id"]
         if "Посмотреть статистику" in update.message.text:
-            await update.message.reply_text(f"Просмотр статистики пользователя: {artist}")
-            return 13
+            await update.message.reply_text(get_statistics(int(artist_id)), parse_mode=ParseMode.HTML)
+            return 3
         elif "Внести данные о статистике" in update.message.text:
-            await update.message.reply_text(f"Изменение статистики пользователя: {artist}")
-            return 13
+            await update.message.reply_text(f"Изменение статистики пользователя: {artist_id}")
+            return 4
         else:
             await update.message.reply_text(f"ты еблан?", reply_markup=get_menu('admin_global').reply_markup)
             return ConversationHandler.END
+
+def get_statistics(artist_id):
+    statistics = (
+        Statistics
+        .select()
+        .where(Statistics.artist_id == artist_id)
+        .order_by(Statistics.year, Statistics.quarter)
+    )
+
+    if not statistics:  # Если данных нет
+        return "Нет данных для отображения."
+
+    # Создаем таблицу
+    table = PrettyTable()
+    table.field_names = ["Year", "Квартал 1", "Квартал 2", "Квартал 3", "Квартал 4"]
+    table.align = "c"  # Выравнивание по центру
+    table.header = True
+
+    # Устанавливаем одинаковую ширину для всех колонок
+    column_width = 22
+    for field in table.field_names:
+        table.min_width[field] = column_width
+
+    # Группируем данные по годам
+    grouped_statistics = {}
+    for statistic in statistics:
+        year = statistic.year
+        if year not in grouped_statistics:
+            grouped_statistics[year] = ["⚪️"] * 4  # По умолчанию — ⚪️ для каждого квартала
+        grouped_statistics[year][statistic.quarter - 1] = f" {states[statistic.state]} "
+
+    # Заполняем таблицу данными
+    for year, quarters in grouped_statistics.items():
+        table.add_row([year] + quarters)
+
+    # Возвращаем таблицу как строку
+    return f"<pre>{table}</pre>"
+
+
+
+
+async def show_statistics(update,context):
+    pass
+async def change_statistics(update,context):
+    pass
