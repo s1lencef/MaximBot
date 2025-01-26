@@ -7,7 +7,7 @@ from config import *
 from menu import *
 from core import checkadmin
 from yandex_music_service import *
-from prettytable import PrettyTable
+from prettytable import PrettyTable, ALL
 
 async def reg_admin(update, context):
     reply_markup = None
@@ -555,17 +555,25 @@ async def get_tracks(update, context, artist_name):
         await update.message.reply_text(e.__str__())
 
 
-def modify_result(tracks):
+def modify_result(result):
     total = "total"
-    delimeter = ",\n"
+    title = "title"
+
     answ = ""
-    for k in list(tracks.keys())[0:-1]:
-        temp = delimeter.join(tracks[k]["tracks"])
-        if temp:
-            answ += f"<b><i>{k}</i></b>\n{temp}\n<u><i>Всего: {tracks[k][total]}</i></u>\n\n"
+    for k in list(result.keys())[0:-1]:
+        answ += f"<b><i>{k}</i></b>\n"
+        releases = result[k]["releases"]
+        print("temp = "  + str(releases))
+        if releases:
+            for release in releases:
+                tracks =" - сингл";
+                if release['count']>1:
+                    tracks = " - альбом" + "".join(["\n   - " + track for track in release['tracks']])
+                answ += f"<b>{release[title]}</b>{tracks}\n"
+            answ += f"<u><i>Всего: {result[k][total]}</i></u>\n\n"
         else:
-            answ += f"<b><i>{k}</i></b>\nТреки отсуствуют\n\n"
-    answ += f"<u><i>Всего: {tracks[total]}</i></u>"
+            answ += f"Треки отсуствуют\n\n"
+    answ += f"<u><i>Всего: {result[total]}</i></u>"
 
     return answ
 
@@ -694,6 +702,9 @@ async def choose_statistics(update, context):
     if context.user_data["artist_id"]:
         artist_id = context.user_data["artist_id"]
         if "Посмотреть статистику" in update.message.text:
+            menu = build_menu([], 2, footer_buttons=[
+                InlineKeyboardButton("Закончить", callback_data="cancel")
+            ])
             await update.message.reply_text(get_statistics(int(artist_id)), parse_mode=ParseMode.HTML)
             return 3
         elif "Внести данные о статистике" in update.message.text:
@@ -716,12 +727,13 @@ def get_statistics(artist_id):
 
     # Создаем таблицу
     table = PrettyTable()
-    table.field_names = ["Year", "Квартал 1", "Квартал 2", "Квартал 3", "Квартал 4"]
+    table.field_names = ["Год", "Кв. 1", "Кв. 2", "Кв. 3", "Кв. 4"]
     table.align = "c"  # Выравнивание по центру
     table.header = True
+    table.hrules = ALL  # Добавляем горизонтальные линии между строками
 
     # Устанавливаем одинаковую ширину для всех колонок
-    column_width = 22
+    column_width = 5
     for field in table.field_names:
         table.min_width[field] = column_width
 
@@ -739,7 +751,6 @@ def get_statistics(artist_id):
 
     # Возвращаем таблицу как строку
     return f"<pre>{table}</pre>"
-
 
 
 
