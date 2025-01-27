@@ -39,8 +39,7 @@ conv_statistics_handler = ConversationHandler(
     states={
         1: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_statistics_main_menu)],
         2: [MessageHandler(filters.TEXT & ~filters.COMMAND, choose_statistics)],
-        3: [MessageHandler(filters.TEXT & ~filters.COMMAND, show_statistics)],
-        4: [MessageHandler(filters.TEXT & ~filters.COMMAND, change_statistics)]
+        3: [MessageHandler(filters.TEXT & ~filters.COMMAND, change_statistics)]
     },
     fallbacks=[CommandHandler("cancel", cancel), CallbackQueryHandler(btn_handler)]
 

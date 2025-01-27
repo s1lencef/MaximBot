@@ -1,6 +1,9 @@
+from black import nullcontext
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, ContextTypes, ConversationHandler
 from telegram.constants import ParseMode
+
+import user_commands
 from core import *
 from models import *
 from config import *
@@ -8,6 +11,9 @@ from menu import *
 from core import checkadmin
 from yandex_music_service import *
 from prettytable import PrettyTable, ALL
+
+cancel_reply_markup = InlineKeyboardMarkup(build_menu([InlineKeyboardButton('Отмена', callback_data='cancel')]))
+
 
 async def reg_admin(update, context):
     reply_markup = None
@@ -80,7 +86,7 @@ async def btn_handler(update, context):
     query = update.callback_query
     args = query.data.split('#')
     print(args)
-    cancel_reply_markup = InlineKeyboardMarkup(build_menu([InlineKeyboardButton('Отмена', callback_data='cancel')]))
+
     if args[0] == 'loyalty_level':
         if args[1] == '+':
             text = "Введите сумму, которая должна быть на этом уровне:"
@@ -252,9 +258,37 @@ async def btn_handler(update, context):
                 result = e.__str__()
                 await query.edit_message_text(text=result, parse_mode=ParseMode.HTML)
         return ConversationHandler.END
+    elif args[0] == "statistics":
+        print(context.user_data)
+        if len(args) == 4:
+            statistics = Statistics(artist_id=int(context.user_data["artist_id"]), year=int(args[1]),
+                                    quarter=int(args[2]), state=int(args[3]))
+            statistics.save()
+            await query.edit_message_text(
+                text=f"Добавлена информация \n Артист: <i>{statistics.artist_id.name}</i>\n Год: <i>{statistics.year}</i>\n Квартал: <i>{statistics.quarter}</i>\n Статус: <i>{states_names[statistics.state]}</i>",
+            parse_mode = ParseMode.HTML)
+            return ConversationHandler.END
+        elif len(args) == 3:
+            buttons = [InlineKeyboardButton(states_names[i], callback_data=query.data + "#" + str(i)) for i in range(0, 3)]
+            print(query.data)
+            menu = build_menu(buttons, n_cols=3, footer_buttons=[InlineKeyboardButton("Назад",callback_data=args[0]+"#"+args[1])])
+
+            await query.edit_message_text(text="Статус квартала", parse_mode=ParseMode.HTML,
+                                          reply_markup=InlineKeyboardMarkup(menu))
+
+        elif len(args) == 2:
+            buttons = [InlineKeyboardButton(f"Квартал {i}", callback_data=query.data + "#" + str(i)) for i in
+                       range(1, 5)]
+            menu = build_menu(buttons, n_cols=4, footer_buttons=[InlineKeyboardButton("Назад",callback_data=args[0])])
+            await query.edit_message_text(text="Выберите квартал", parse_mode=ParseMode.HTML,
+                                          reply_markup=InlineKeyboardMarkup(menu))
+        else:
+            menu = build_menu([InlineKeyboardButton(year, callback_data="statistics#" + str(year)) for year in
+                               range(2020, datetime.now().year+1)], n_cols=4)
+            await query.edit_message_text(f"Выберите год", reply_markup=InlineKeyboardMarkup(menu))
     elif args[0] == "cancel":
-        await query.edit_message_text(text="Действие отменено!", reply_markup=None,
-                                      parse_mode=ParseMode.HTML)
+        context.user_data["artist_id"] = None
+        await query.edit_message_text(text="Действие отменено!", parse_mode=ParseMode.HTML)
         return ConversationHandler.END
 
 
@@ -563,11 +597,11 @@ def modify_result(result):
     for k in list(result.keys())[0:-1]:
         answ += f"<b><i>{k}</i></b>\n"
         releases = result[k]["releases"]
-        print("temp = "  + str(releases))
+        print("temp = " + str(releases))
         if releases:
             for release in releases:
-                tracks =" - сингл";
-                if release['count']>1:
+                tracks = " - сингл";
+                if release['count'] > 1:
                     tracks = " - альбом" + "".join(["\n   - " + track for track in release['tracks']])
                 answ += f"<b>{release[title]}</b>{tracks}\n"
             answ += f"<u><i>Всего: {result[k][total]}</i></u>\n\n"
@@ -691,28 +725,38 @@ async def get_statistics_main_menu(update, context):
         except Exception as e:
             await update.message.reply_text(e.__str__())
             return ConversationHandler.END
+
+        for year in range(2020, datetime.now().year + 1):
+            for i in range(1, 5):
+                statistics = Statistics(artist_id=artist.id, year=year, quarter=i, state=0)
+                statistics.save()
+
     context.user_data["artist_id"] = artist.id
     await update.message.reply_text("Выберите действие", reply_markup=get_menu('statistics').reply_markup)
     return 2
 
 
 async def choose_statistics(update, context):
-    print("12 active")
+    print(update.message.text)
     print(context.user_data["artist_id"])
     if context.user_data["artist_id"]:
         artist_id = context.user_data["artist_id"]
         if "Посмотреть статистику" in update.message.text:
-            menu = build_menu([], 2, footer_buttons=[
-                InlineKeyboardButton("Закончить", callback_data="cancel")
-            ])
             await update.message.reply_text(get_statistics(int(artist_id)), parse_mode=ParseMode.HTML)
-            return 3
+            return 2
         elif "Внести данные о статистике" in update.message.text:
-            await update.message.reply_text(f"Изменение статистики пользователя: {artist_id}")
-            return 4
+            menu = build_menu([InlineKeyboardButton(year, callback_data="statistics#" + str(year)) for year in
+                               range(2020, datetime.now().year+1)], n_cols=4)
+            await update.message.reply_text(f"Выберите год", reply_markup=InlineKeyboardMarkup(menu))
+        elif 'Другой артист' in update.message.text or "Статистика" in update.message.text:
+            context.user_data["artist_id"] = None
+            await update.message.reply_text(f"Введите имя артиста:")
+            return 1
         else:
-            await update.message.reply_text(f"ты еблан?", reply_markup=get_menu('admin_global').reply_markup)
+            context.user_data["artist_id"] = None
+            await update.message.reply_text(text="Завершено", reply_markup=get_menu('admin_global').reply_markup)
             return ConversationHandler.END
+
 
 def get_statistics(artist_id):
     statistics = (
@@ -753,8 +797,9 @@ def get_statistics(artist_id):
     return f"<pre>{table}</pre>"
 
 
-
-async def show_statistics(update,context):
+async def show_statistics(update, context):
     pass
-async def change_statistics(update,context):
+
+
+async def change_statistics(update, context):
     pass
