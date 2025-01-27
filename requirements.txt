@@ -1,0 +1,7 @@
+python-telegram-bot==20.6
+peewee==3.16.3
+APScheduler==3.6.3
+pytz==2023.3.post1
+setuptools==65.5.0
+black==24.2.0
+prettytable==3.13.0
