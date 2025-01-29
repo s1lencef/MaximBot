@@ -153,7 +153,7 @@ class YandexMusicService():
             artist_list = []
             for artist in result.artists.results:
 
-                if artist.name == artist_name:
+                if artist.name.lower() == artist_name.lower():
                     artist_list.append(Artist(artist.name, artist.id))
         else:
 

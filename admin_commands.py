@@ -1,8 +1,9 @@
 from black import nullcontext
+from pyexpat.errors import messages
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, ContextTypes, ConversationHandler
 from telegram.constants import ParseMode
-
+import os
 import user_commands
 from core import *
 from models import *
@@ -11,6 +12,8 @@ from menu import *
 from core import checkadmin
 from yandex_music_service import *
 from prettytable import PrettyTable, ALL
+from parser import process
+
 
 cancel_reply_markup = InlineKeyboardMarkup(build_menu([InlineKeyboardButton('Отмена', callback_data='cancel')]))
 
@@ -266,12 +269,14 @@ async def btn_handler(update, context):
             statistics.save()
             await query.edit_message_text(
                 text=f"Добавлена информация \n Артист: <i>{statistics.artist_id.name}</i>\n Год: <i>{statistics.year}</i>\n Квартал: <i>{statistics.quarter}</i>\n Статус: <i>{states_names[statistics.state]}</i>",
-            parse_mode = ParseMode.HTML)
+                parse_mode=ParseMode.HTML)
             return ConversationHandler.END
         elif len(args) == 3:
-            buttons = [InlineKeyboardButton(states_names[i], callback_data=query.data + "#" + str(i)) for i in range(0, 3)]
+            buttons = [InlineKeyboardButton(states_names[i], callback_data=query.data + "#" + str(i)) for i in
+                       range(0, 3)]
             print(query.data)
-            menu = build_menu(buttons, n_cols=3, footer_buttons=[InlineKeyboardButton("Назад",callback_data=args[0]+"#"+args[1])])
+            menu = build_menu(buttons, n_cols=3,
+                              footer_buttons=[InlineKeyboardButton("Назад", callback_data=args[0] + "#" + args[1])])
 
             await query.edit_message_text(text="Статус квартала", parse_mode=ParseMode.HTML,
                                           reply_markup=InlineKeyboardMarkup(menu))
@@ -279,12 +284,12 @@ async def btn_handler(update, context):
         elif len(args) == 2:
             buttons = [InlineKeyboardButton(f"Квартал {i}", callback_data=query.data + "#" + str(i)) for i in
                        range(1, 5)]
-            menu = build_menu(buttons, n_cols=4, footer_buttons=[InlineKeyboardButton("Назад",callback_data=args[0])])
+            menu = build_menu(buttons, n_cols=4, footer_buttons=[InlineKeyboardButton("Назад", callback_data=args[0])])
             await query.edit_message_text(text="Выберите квартал", parse_mode=ParseMode.HTML,
                                           reply_markup=InlineKeyboardMarkup(menu))
         else:
             menu = build_menu([InlineKeyboardButton(year, callback_data="statistics#" + str(year)) for year in
-                               range(2020, datetime.now().year+1)], n_cols=4)
+                               range(2020, datetime.now().year + 1)], n_cols=4)
             await query.edit_message_text(f"Выберите год", reply_markup=InlineKeyboardMarkup(menu))
     elif args[0] == "cancel":
         context.user_data["artist_id"] = None
@@ -746,7 +751,7 @@ async def choose_statistics(update, context):
             return 2
         elif "Внести данные о статистике" in update.message.text:
             menu = build_menu([InlineKeyboardButton(year, callback_data="statistics#" + str(year)) for year in
-                               range(2020, datetime.now().year+1)], n_cols=4)
+                               range(2020, datetime.now().year + 1)], n_cols=4)
             await update.message.reply_text(f"Выберите год", reply_markup=InlineKeyboardMarkup(menu))
         elif 'Другой артист' in update.message.text or "Статистика" in update.message.text:
             context.user_data["artist_id"] = None
@@ -797,9 +802,29 @@ def get_statistics(artist_id):
     return f"<pre>{table}</pre>"
 
 
-async def show_statistics(update, context):
-    pass
+async def upload_statistics(update, context):
+    context.user_data["document_type"] = "statistics"
+    await update.message.reply_text("Пожалуйста, отправьте XLSX файл с данными")
 
 
-async def change_statistics(update, context):
-    pass
+async def process_document(update, context):
+    if not context.user_data["document_type"]:
+        await update.message.reply_text("Я не знаю что сделать с этим файлом!")
+        return
+    if context.user_data["document_type"] == "statistics":
+        try:
+            message = await process_statistics_document(update.message.document)
+            await update.message.reply_text(message)
+            context.user_data["document_type"] = None
+        except Exception as e:
+            await update.message.reply_text(e.__str__())
+
+
+
+async def process_statistics_document( document):
+    if not document.file_name.endswith(".xlsx"):
+        raise RuntimeError("Пожалуйста, отправьте файл в формате XLSX.")
+    file_path = os.path.join(UPLOAD_FOLDER, document.file_name)
+    new_file = await document.get_file()
+    await new_file.download_to_drive(file_path)
+    return process(file_path)

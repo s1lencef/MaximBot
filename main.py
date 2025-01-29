@@ -43,7 +43,12 @@ def schedule():
     scheduler.start()
 
 
+def create_uploads_folder():
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
 def main():
+    create_uploads_folder()
     schedule()
     app = Application.builder().token(token).build()
     app.add_handler(CommandHandler("start", start))
@@ -65,6 +70,8 @@ def main():
     app.add_handler(MessageHandler(filters.Regex("Настроить данные приложения"), change_loyalty))
     app.add_handler(CommandHandler("get_tracks", get_tracks_command))
     app.add_handler(CommandHandler("get_artist", get_artists_command))
+    app.add_handler(CommandHandler("upload_statistics", upload_statistics))
+    app.add_handler(MessageHandler(filters.Document.ALL, process_document))
     app.add_handler(MessageHandler(filters.TEXT, unknown_text))
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
