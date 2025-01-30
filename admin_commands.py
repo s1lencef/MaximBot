@@ -813,6 +813,7 @@ async def process_document(update, context):
         return
     if context.user_data["document_type"] == "statistics":
         try:
+            await update.message.reply_text("Подождите...")
             message = await process_statistics_document(update.message.document)
             await update.message.reply_text(message)
             context.user_data["document_type"] = None
