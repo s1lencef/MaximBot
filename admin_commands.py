@@ -272,6 +272,25 @@ async def btn_handler(update, context):
                 parse_mode=ParseMode.HTML)
             return ConversationHandler.END
         elif len(args) == 3:
+            if args[1] == "create":
+                if args[2] == "cancel":
+                    query.edit_message_text("Создание отменено.")
+                    return ConversationHandler.END
+                else:
+                    artist = ArtistModel(name=args[2])
+                    try:
+                        artist.save()
+                        context.user_data["artist_id"] = artist.id
+                    except Exception as e:
+                        await update.message.reply_text(e.__str__())
+                        return ConversationHandler.END
+
+                    for year in range(2020, datetime.now().year + 1):
+                        for i in range(1, 5):
+                            statistics = Statistics(artist_id=artist.id, year=year, quarter=i, state=0)
+                            statistics.save()
+                    await query.message.reply_text("Выберите действие", reply_markup=get_menu("statistics").reply_markup)
+
             buttons = [InlineKeyboardButton(states_names[i], callback_data=query.data + "#" + str(i)) for i in
                        range(0, 3)]
             print(query.data)
@@ -723,21 +742,18 @@ async def get_statistics_main_menu(update, context):
     artist_name = update.message.text
     try:
         artist = ArtistModel.get(ArtistModel.name == artist_name)
+        context.user_data["artist_id"] = artist.id
+        reply_markup = get_menu('statistics').reply_markup
+        text = "Выберите действие"
     except ArtistModel.DoesNotExist:
-        artist = ArtistModel(name=artist_name)
-        try:
-            artist.save()
-        except Exception as e:
-            await update.message.reply_text(e.__str__())
-            return ConversationHandler.END
+        reply_markup = InlineKeyboardMarkup(build_menu([
+            InlineKeyboardButton("Да",callback_data= "statistics#create#"+artist_name),
+            InlineKeyboardButton("Нет",callback_data= "statistics#create#cancel"),
+                                   ], n_cols=2))
 
-        for year in range(2020, datetime.now().year + 1):
-            for i in range(1, 5):
-                statistics = Statistics(artist_id=artist.id, year=year, quarter=i, state=0)
-                statistics.save()
+        text = "Артист не найден в базе.\nСоздать нового артиста?"
 
-    context.user_data["artist_id"] = artist.id
-    await update.message.reply_text("Выберите действие", reply_markup=get_menu('statistics').reply_markup)
+    await update.message.reply_text(text = text, reply_markup= reply_markup)
     return 2
 
 
