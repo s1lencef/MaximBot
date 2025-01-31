@@ -10,7 +10,9 @@ from telegram.ext import (
 from admin_commands import *
 
 conv_sys_handler = ConversationHandler(
-    entry_points=[CallbackQueryHandler(btn_handler)],
+    entry_points=[CallbackQueryHandler(btn_handler),
+                  MessageHandler(filters.Regex("Поиск треков"), get_artist_name_tracks),
+                  MessageHandler(filters.Regex("Статистика"), get_artist_name_stats)],
     states={
         0: [MessageHandler(filters.TEXT & ~filters.COMMAND, sum_level)],
         1: [MessageHandler(filters.TEXT & ~filters.COMMAND, coeff_level)],
@@ -23,24 +25,14 @@ conv_sys_handler = ConversationHandler(
         8: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_points)],
         9: [MessageHandler(filters.TEXT & ~filters.COMMAND, remove_points)],
         10: [MessageHandler(filters.Regex("\d") & ~filters.COMMAND, ban_user)],
-    },
-    fallbacks=[CommandHandler("cancel", cancel), CallbackQueryHandler(btn_handler)],
-)
-conv_tracks_handler = ConversationHandler(
-    entry_points=[CallbackQueryHandler(btn_handler), MessageHandler(filters.Regex("Поиск треков"), get_artist_name)],
-    states={
-        1: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_artists_conv)]
+
+        11: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_artists_conv)],
+
+        12: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_statistics_main_menu)],
+        13: [MessageHandler(filters.TEXT & ~filters.COMMAND, choose_statistics)],
+        14: [CallbackQueryHandler(btn_handler)]
     },
     fallbacks=[CommandHandler("cancel", cancel), CallbackQueryHandler(btn_handler)],
 )
 
-conv_statistics_handler = ConversationHandler(
-    entry_points=[CallbackQueryHandler(btn_handler), MessageHandler(filters.Regex("Статистика"), get_artist_name)],
-    states={
-        1: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_statistics_main_menu)],
-        2: [MessageHandler(filters.TEXT & ~filters.COMMAND, choose_statistics)],
-    },
-    fallbacks=[CommandHandler("cancel", cancel), CallbackQueryHandler(btn_handler)]
-
-)
 

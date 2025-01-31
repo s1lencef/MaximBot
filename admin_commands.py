@@ -14,7 +14,6 @@ from yandex_music_service import *
 from prettytable import PrettyTable, ALL
 from parser import process
 
-
 cancel_reply_markup = InlineKeyboardMarkup(build_menu([InlineKeyboardButton('Отмена', callback_data='cancel')]))
 
 
@@ -274,8 +273,10 @@ async def btn_handler(update, context):
         elif len(args) == 3:
             if args[1] == "create":
                 if args[2] == "cancel":
-                    query.edit_message_text("Создание отменено.")
-                    return ConversationHandler.END
+                    context.user_data["artist_id"] = None
+                    await query.edit_message_text(
+                        "Создание отменено.\n Введите имя артиста повторно", reply_markup = cancel_reply_markup, parse_mode=ParseMode.HTML)
+                    return 12
                 else:
                     artist = ArtistModel(name=args[2])
                     try:
@@ -289,16 +290,18 @@ async def btn_handler(update, context):
                         for i in range(1, 5):
                             statistics = Statistics(artist_id=artist.id, year=year, quarter=i, state=0)
                             statistics.save()
-                    await query.message.reply_text("Выберите действие", reply_markup=get_menu("statistics").reply_markup)
+                    await query.message.reply_text("Выберите действие",
+                                                   reply_markup=get_menu("statistics").reply_markup)
+                    return 13
+            else:
+                buttons = [InlineKeyboardButton(states_names[i], callback_data=query.data + "#" + str(i)) for i in
+                           range(0, 3)]
+                print(query.data)
+                menu = build_menu(buttons, n_cols=3,
+                                  footer_buttons=[InlineKeyboardButton("Назад", callback_data=args[0] + "#" + args[1])])
 
-            buttons = [InlineKeyboardButton(states_names[i], callback_data=query.data + "#" + str(i)) for i in
-                       range(0, 3)]
-            print(query.data)
-            menu = build_menu(buttons, n_cols=3,
-                              footer_buttons=[InlineKeyboardButton("Назад", callback_data=args[0] + "#" + args[1])])
-
-            await query.edit_message_text(text="Статус квартала", parse_mode=ParseMode.HTML,
-                                          reply_markup=InlineKeyboardMarkup(menu))
+                await query.edit_message_text(text="Статус квартала", parse_mode=ParseMode.HTML,
+                                              reply_markup=InlineKeyboardMarkup(menu))
 
         elif len(args) == 2:
             buttons = [InlineKeyboardButton(f"Квартал {i}", callback_data=query.data + "#" + str(i)) for i in
@@ -643,7 +646,16 @@ async def get_artist_name(update, context):
         await update.message.reply_text(e.__str__())
         return ConversationHandler.END
     await update.message.reply_text("Введите имя артиста")
-    return 1
+
+
+async def get_artist_name_tracks(update, context):
+    await get_artist_name(update, context)
+    return 11
+
+
+async def get_artist_name_stats(update, context):
+    await get_artist_name(update, context)
+    return 12
 
 
 async def get_tracks_conv(update, context):
@@ -739,43 +751,69 @@ async def get_artists_command(update, context):
 
 
 async def get_statistics_main_menu(update, context):
-    artist_name = update.message.text
-    try:
-        artist = ArtistModel.get(ArtistModel.name == artist_name)
-        context.user_data["artist_id"] = artist.id
-        reply_markup = get_menu('statistics').reply_markup
-        text = "Выберите действие"
-    except ArtistModel.DoesNotExist:
-        reply_markup = InlineKeyboardMarkup(build_menu([
-            InlineKeyboardButton("Да",callback_data= "statistics#create#"+artist_name),
-            InlineKeyboardButton("Нет",callback_data= "statistics#create#cancel"),
-                                   ], n_cols=2))
+    print(update.message.text)
+    if "Завершить" in update.message.text:
+        print("pdfsl'dc,dslvdskvcds")
+        n = ConversationHandler.END
+        text = "Завершено."
+        reply_markup = None
+    else:
+        artist_name = update.message.text
+        try:
+            artist = ArtistModel.get(ArtistModel.name == artist_name)
+            context.user_data["artist_id"] = artist.id
+            reply_markup = get_menu('statistics').reply_markup
+            text = "Выберите действие"
+            n = 13
+        except ArtistModel.DoesNotExist:
+            reply_markup = InlineKeyboardMarkup(build_menu([
+                InlineKeyboardButton("Да", callback_data="statistics#create#" + artist_name),
+                InlineKeyboardButton("Нет", callback_data="statistics#create#cancel"),
+            ], n_cols=2))
 
-        text = "Артист не найден в базе.\nСоздать нового артиста?"
+            text = "Артист не найден в базе.\nСоздать нового артиста?"
+            n = 14
 
-    await update.message.reply_text(text = text, reply_markup= reply_markup)
-    return 2
+    await update.message.reply_text(text=text, reply_markup=reply_markup)
+    return n
 
 
 async def choose_statistics(update, context):
     print(update.message.text)
-    print(context.user_data["artist_id"])
-    if context.user_data["artist_id"]:
-        artist_id = context.user_data["artist_id"]
-        if "Посмотреть статистику" in update.message.text:
-            await update.message.reply_text(get_statistics(int(artist_id)), parse_mode=ParseMode.HTML)
-            return 2
-        elif "Внести данные о статистике" in update.message.text:
-            menu = build_menu([InlineKeyboardButton(year, callback_data="statistics#" + str(year)) for year in
-                               range(2020, datetime.now().year + 1)], n_cols=4)
-            await update.message.reply_text(f"Выберите год", reply_markup=InlineKeyboardMarkup(menu))
-        elif 'Другой артист' in update.message.text or "Статистика" in update.message.text:
-            context.user_data["artist_id"] = None
-            await update.message.reply_text(f"Введите имя артиста:")
-            return 1
+
+    try:
+        if context.user_data["artist_id"]:
+            artist_id = context.user_data["artist_id"]
+            if "Посмотреть статистику" in update.message.text:
+                await update.message.reply_text(get_statistics(int(artist_id)), parse_mode=ParseMode.HTML)
+                return 13
+            elif "Внести данные о статистике" in update.message.text:
+                menu = build_menu([InlineKeyboardButton(year, callback_data="statistics#" + str(year)) for year in
+                                   range(2020, datetime.now().year + 1)], n_cols=4)
+                await update.message.reply_text(f"Выберите год", reply_markup=InlineKeyboardMarkup(menu))
+            elif 'Другой артист' in update.message.text or "Статистика" in update.message.text:
+                context.user_data["artist_id"] = None
+                await update.message.reply_text(f"Введите имя артиста:")
+                return 12
+            else:
+                context.user_data["artist_id"] = None
+                await update.message.reply_text(text="Завершено", reply_markup=get_menu('admin_global').reply_markup)
+                return ConversationHandler.END
+    except KeyError:
+        context.user_data["artist_id"] = None
+        if update.message.text:
+            if "Статистика" in update.message.text:
+                await update.message.reply_text(f"Введите имя артиста:")
+                return 12
+            else:
+                await update.message.reply_text(
+                    "Работа со статистикой завершена. Повторите команду",
+                    reply_markup=get_menu('admin_global').reply_markup, parse_mode=ParseMode.HTML)
+                return ConversationHandler.END
         else:
-            context.user_data["artist_id"] = None
-            await update.message.reply_text(text="Завершено", reply_markup=get_menu('admin_global').reply_markup)
+            await update.message.reply_text("Работа со статистикой завершена. Повторите команду",
+                                            reply_markup=get_menu('admin_global').reply_markup,
+                                            parse_mode=ParseMode.HTML)
             return ConversationHandler.END
 
 
@@ -837,8 +875,7 @@ async def process_document(update, context):
             await update.message.reply_text(e.__str__())
 
 
-
-async def process_statistics_document( document):
+async def process_statistics_document(document):
     if not document.file_name.endswith(".xlsx"):
         raise RuntimeError("Пожалуйста, отправьте файл в формате XLSX.")
     file_path = os.path.join(UPLOAD_FOLDER, document.file_name)
