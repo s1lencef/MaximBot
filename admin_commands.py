@@ -269,13 +269,15 @@ async def btn_handler(update, context):
             await query.edit_message_text(
                 text=f"Добавлена информация \n Артист: <i>{statistics.artist_id.name}</i>\n Год: <i>{statistics.year}</i>\n Квартал: <i>{statistics.quarter}</i>\n Статус: <i>{states_names[statistics.state]}</i>",
                 parse_mode=ParseMode.HTML)
-            return ConversationHandler.END
+            return 13
         elif len(args) == 3:
             if args[1] == "create":
                 if args[2] == "cancel":
                     context.user_data["artist_id"] = None
                     await query.edit_message_text(
                         "Создание отменено.\n Введите имя артиста повторно", reply_markup = cancel_reply_markup, parse_mode=ParseMode.HTML)
+
+                    context.user_data["update"] = 2
                     return 12
                 else:
                     artist = ArtistModel(name=args[2])
@@ -302,6 +304,7 @@ async def btn_handler(update, context):
 
                 await query.edit_message_text(text="Статус квартала", parse_mode=ParseMode.HTML,
                                               reply_markup=InlineKeyboardMarkup(menu))
+                return 14
 
         elif len(args) == 2:
             buttons = [InlineKeyboardButton(f"Квартал {i}", callback_data=query.data + "#" + str(i)) for i in
@@ -309,13 +312,24 @@ async def btn_handler(update, context):
             menu = build_menu(buttons, n_cols=4, footer_buttons=[InlineKeyboardButton("Назад", callback_data=args[0])])
             await query.edit_message_text(text="Выберите квартал", parse_mode=ParseMode.HTML,
                                           reply_markup=InlineKeyboardMarkup(menu))
+            return 14
         else:
             menu = build_menu([InlineKeyboardButton(year, callback_data="statistics#" + str(year)) for year in
                                range(2020, datetime.now().year + 1)], n_cols=4)
             await query.edit_message_text(f"Выберите год", reply_markup=InlineKeyboardMarkup(menu))
+
+            return 14
     elif args[0] == "cancel":
         context.user_data["artist_id"] = None
         await query.edit_message_text(text="Действие отменено!", parse_mode=ParseMode.HTML)
+        try:
+            context.user_data["update"]
+            await query.message.reply_text(text="Меню обновлено", reply_markup =  get_menu("admin_global").reply_markup, parse_mode=ParseMode.HTML)
+            del context.user_data["update"]
+        except Exception:
+            pass
+
+
         return ConversationHandler.END
 
 
@@ -753,10 +767,9 @@ async def get_artists_command(update, context):
 async def get_statistics_main_menu(update, context):
     print(update.message.text)
     if "Завершить" in update.message.text:
-        print("pdfsl'dc,dslvdskvcds")
         n = ConversationHandler.END
         text = "Завершено."
-        reply_markup = None
+        reply_markup = get_menu("admin_global").reply_markup
     else:
         artist_name = update.message.text
         try:
