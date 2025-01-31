@@ -273,6 +273,7 @@ async def btn_handler(update, context):
         elif len(args) == 3:
             if args[1] == "create":
                 if args[2] == "cancel":
+                    await query.edit_message_text("Подождите...")
                     context.user_data["artist_id"] = None
                     await query.edit_message_text(
                         "Создание отменено.\n Введите имя артиста повторно", reply_markup = cancel_reply_markup, parse_mode=ParseMode.HTML)
@@ -280,6 +281,7 @@ async def btn_handler(update, context):
                     context.user_data["update"] = 2
                     return 12
                 else:
+                    await query.edit_message_text("Подождите...")
                     artist = ArtistModel(name=args[2])
                     try:
                         artist.save()
@@ -292,6 +294,7 @@ async def btn_handler(update, context):
                         for i in range(1, 5):
                             statistics = Statistics(artist_id=artist.id, year=year, quarter=i, state=0)
                             statistics.save()
+                    await query.edit_message_text("Артист создан")
                     await query.message.reply_text("Выберите действие",
                                                    reply_markup=get_menu("statistics").reply_markup)
                     return 13
