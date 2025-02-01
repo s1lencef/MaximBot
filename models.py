@@ -34,10 +34,14 @@ class User(BaseModel):
 class ArtistModel(BaseModel):
     id = AutoField(primary_key=True)
     name = CharField()
+    agreement = CharField(null=False, unique= True,constraints=[Check("agreement GLOB '[0-9]-[0-9][0-9][0-9]'")])
+    agreement_path = CharField(null=False)
+    is_user_approved = BooleanField(default=False)
+    linked_user = ForeignKeyField(User, null=True, on_update='cascade')
 
 
 class Statistics(BaseModel):
-    artist_id = ForeignKeyField(ArtistModel, null=False, on_update='cascade')
+    artist_id = ForeignKeyField(ArtistModel, null=False, on_update='cascade', on_delete='cascade')
     year = IntegerField(default=datetime.now().year)
     quarter = IntegerField(constraints=[Check('quarter >= 1'), Check('quarter <= 4')])
     state = IntegerField(constraints=[Check('state >= 0'), Check('state <= 2')], default=0)

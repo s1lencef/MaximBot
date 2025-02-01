@@ -3,7 +3,11 @@ from models import *
 from peewee import DoesNotExist
 from telegram.constants import ParseMode
 from menu import *
+import re
 
+def is_valid_format(s):
+    pattern = r"^\d-\d{3}$"  # ^ - начало строки, \d - одна цифра, {3} - три цифры, $ - конец строки
+    return bool(re.fullmatch(pattern, s))
 
 class DoesNotExist(Exception):
     def __int__(self, text="User Not Found"):

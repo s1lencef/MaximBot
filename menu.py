@@ -43,7 +43,8 @@ menus = {
                     KeyboardButton('📋 Настроить данные приложения'),
                     KeyboardButton("👥 Управлять пользователями"),
                     KeyboardButton("🎶 Поиск треков"),
-                    KeyboardButton("📊 Статистика")
+                    KeyboardButton("📊 Статистика"),
+                    KeyboardButton("Добавить артиста")
                 ],
                 'header': None,
                 'footer': None,
@@ -112,6 +113,21 @@ menus = {
                 'header': None,
                 'footer': None,
                 'n_cols': 1
+            },
+        ]
+    },
+    "create_artist": {
+        'type': 'inline',
+        'body': [
+            {
+                'text': 'Statistics manu',
+                'buttons': [
+                    InlineKeyboardButton('Да', callback_data="artists#create#True"),
+                    InlineKeyboardButton('Нет', callback_data="artists#create#False"),
+                ],
+                'header': None,
+                'footer': None,
+                'n_cols': 2
             },
         ]
     },

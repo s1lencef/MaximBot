@@ -5,3 +5,4 @@ pytz==2023.3.post1
 black==24.2.0
 prettytable==3.13.0
 openpyxl==3.1.5
+yandex-music==2.2.0

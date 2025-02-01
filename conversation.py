@@ -12,7 +12,9 @@ from admin_commands import *
 conv_sys_handler = ConversationHandler(
     entry_points=[CallbackQueryHandler(btn_handler),
                   MessageHandler(filters.Regex("Поиск треков"), get_artist_name_tracks),
-                  MessageHandler(filters.Regex("Статистика"), get_artist_name_stats)],
+                  MessageHandler(filters.Regex("Статистика"), get_artist_name_stats),
+                  MessageHandler(filters.Regex("Добавить артиста"), get_artist_name_create)
+                  ],
     states={
         0: [MessageHandler(filters.TEXT & ~filters.COMMAND, sum_level)],
         1: [MessageHandler(filters.TEXT & ~filters.COMMAND, coeff_level)],
@@ -30,7 +32,10 @@ conv_sys_handler = ConversationHandler(
 
         12: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_statistics_main_menu)],
         13: [MessageHandler(filters.TEXT & ~filters.COMMAND, choose_statistics)],
-        14: [CallbackQueryHandler(btn_handler)]
+        14: [CallbackQueryHandler(btn_handler)],
+        15: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_agreement_create)],
+        16: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_agreement_file_create)],
+        17: [MessageHandler(filters.Document.ALL, process_document_conv)]
     },
     fallbacks=[CommandHandler("cancel", cancel), CallbackQueryHandler(btn_handler)],
 )

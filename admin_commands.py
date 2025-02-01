@@ -245,21 +245,30 @@ async def btn_handler(update, context):
     elif args[0] == "artists":
         if args[2] == "back":
             await get_artist_query(query, args[1])
+            return ConversationHandler.END
         else:
-            try:
-                menu = build_menu([
-                    InlineKeyboardButton("<", callback_data="artists#" + args[1] + "#back")], 1)
-                reply_markup = InlineKeyboardMarkup(menu)
-                service = YandexMusicService()
-                tracks = service.get_artist_tracks(int(args[2]))
-                print(tracks.keys())
-                result = modify_result(tracks)
+            if args[1] == "create":
+                if args[1] == "True":
+                    await query.edit_message_text("Отправьте документ в формате .XLSX")
+                    context.user_data["document_type"] = "statistics"
+                    return 17
+                else:
+                    return ConversationHandler.END
+            else:
+                try:
+                    menu = build_menu([
+                        InlineKeyboardButton("<", callback_data="artists#" + args[1] + "#back")], 1)
+                    reply_markup = InlineKeyboardMarkup(menu)
+                    service = YandexMusicService()
+                    tracks = service.get_artist_tracks(int(args[2]))
+                    print(tracks.keys())
+                    result = modify_result(tracks)
 
-                await query.edit_message_text(text=result, parse_mode=ParseMode.HTML, reply_markup=reply_markup)
-            except Exception as e:
-                result = e.__str__()
-                await query.edit_message_text(text=result, parse_mode=ParseMode.HTML)
-        return ConversationHandler.END
+                    await query.edit_message_text(text=result, parse_mode=ParseMode.HTML, reply_markup=reply_markup)
+                except Exception as e:
+                    result = e.__str__()
+                    await query.edit_message_text(text=result, parse_mode=ParseMode.HTML)
+                return ConversationHandler.END
     elif args[0] == "statistics":
         print(context.user_data)
         if len(args) == 4:
@@ -674,6 +683,9 @@ async def get_artist_name_stats(update, context):
     await get_artist_name(update, context)
     return 12
 
+async def get_artist_name_create(update,context):
+    await get_artist_name(update, context)
+    return 12
 
 async def get_tracks_conv(update, context):
     if update.message.text:
@@ -878,18 +890,20 @@ async def upload_statistics(update, context):
 
 
 async def process_document(update, context):
-    if not context.user_data["document_type"]:
-        await update.message.reply_text("Я не знаю что сделать с этим файлом!")
-        return
-    if context.user_data["document_type"] == "statistics":
-        try:
-            await update.message.reply_text("Подождите...")
-            message = await process_statistics_document(update.message.document)
-            await update.message.reply_text(message)
-            context.user_data["document_type"] = None
-        except Exception as e:
-            await update.message.reply_text(e.__str__())
-
+    try:
+        if not context.user_data["document_type"]:
+            await update.message.reply_text("Я не знаю что сделать с этим файлом!")
+            return
+        if context.user_data["document_type"] == "statistics":
+            try:
+                await update.message.reply_text("Подождите...")
+                message = await process_statistics_document(update.message.document)
+                await update.message.reply_text(message)
+                context.user_data["document_type"] = None
+            except Exception as e:
+                await update.message.reply_text(e.__str__())
+    except Exception as e:
+        await update.message.reply_text(e.__str__())
 
 async def process_statistics_document(document):
     if not document.file_name.endswith(".xlsx"):
@@ -898,3 +912,72 @@ async def process_statistics_document(document):
     new_file = await document.get_file()
     await new_file.download_to_drive(file_path)
     return process(file_path)
+
+async def process_document_conv(update, context):
+    try:
+        if not context.user_data["document_type"]:
+            await update.message.reply_text("Я не знаю что сделать с этим файлом!")
+            return ConversationHandler.END
+        if context.user_data["document_type"] == "statistics":
+            try:
+                await update.message.reply_text("Подождите...")
+                message = await process_statistics_document(update.message.document)
+                await update.message.reply_text(message)
+                context.user_data["document_type"] = None
+            except Exception as e:
+                await update.message.reply_text(e.__str__())
+                return 17
+            return ConversationHandler.END
+        if context.user_data["document_type"] == "agreement":
+            try:
+                await update.message.reply_text("Подождите...")
+                path = await process_statistics_document(update.message.document)
+                context.user_data["agreement_path"] = path
+                message = "Файл сохранен " + path+"\nХотите загрузить статистику артиста?"
+
+                reply_markup = get_menu("create_artist").reply_markup
+
+                await update.message.reply_text(message,reply_markup=reply_markup)
+                context.user_data["document_type"] = None
+                return 14
+            except Exception as e:
+                await update.message.reply_text(e.__str__())
+                return 17
+    except Exception as e:
+        await update.message.reply_text(e.__str__())
+
+
+async def process_agreement_document(document):
+    if not document.file_name.endswith(".pdf"):
+        raise RuntimeError("Пожалуйста, отправьте файл в формате PDF.")
+    file_path = os.path.join(UPLOAD_FOLDER, document.file_name)
+    new_file = await document.get_file()
+    await new_file.download_to_drive(file_path)
+    return file_path
+
+async def get_agreement_create(update, context):
+    if update.message.text:
+        context.user_data['artist_name'] = update.message.text
+    else:
+        await update.message.reply_text("Вы не ввели имя артиста")
+        return ConversationHandler.END
+    await update.message.reply_text("Введите номер договора с артистом в формате <code>Х-ХХХ</code>", parse_mode= ParseMode.HTML)
+    return 16
+
+async def get_agreement_file_create(update, context):
+    if update.message.text:
+        agreement = update.message.text
+        if not is_valid_format(agreement):
+            await update.message.reply_text("Вы не ввели некорректный номер договора\nПовторите ввод")
+            return 15
+        context.user_data['agreement'] = agreement
+        context.user_data["document_type"] = "agreement"
+        await update.message.reply_text("Отправьте файл договора в формате <b>PDF</b>", parse_mode=ParseMode.HTML)
+        return 17
+    else:
+        await update.message.reply_text("Вы не ввели номер договора\nПовторите ввод")
+        return 15
+
+async def ask_for_statistics(update, context):
+
+    pass
