@@ -248,12 +248,14 @@ async def btn_handler(update, context):
             return ConversationHandler.END
         else:
             if args[1] == "create":
-                if args[1] == "True":
+                if args[2] == "True":
                     await query.edit_message_text("Отправьте документ в формате .XLSX")
                     context.user_data["document_type"] = "statistics"
                     return 17
                 else:
+                    await query.edit_message_text(str(context.user_data))
                     return ConversationHandler.END
+                print(context.user_data)
             else:
                 try:
                     menu = build_menu([
@@ -685,7 +687,7 @@ async def get_artist_name_stats(update, context):
 
 async def get_artist_name_create(update,context):
     await get_artist_name(update, context)
-    return 12
+    return 15
 
 async def get_tracks_conv(update, context):
     if update.message.text:
@@ -914,11 +916,13 @@ async def process_statistics_document(document):
     return process(file_path)
 
 async def process_document_conv(update, context):
+
     try:
+        print(context.user_data["document_type"])
         if not context.user_data["document_type"]:
             await update.message.reply_text("Я не знаю что сделать с этим файлом!")
             return ConversationHandler.END
-        if context.user_data["document_type"] == "statistics":
+        elif context.user_data["document_type"] == "statistics":
             try:
                 await update.message.reply_text("Подождите...")
                 message = await process_statistics_document(update.message.document)
@@ -928,12 +932,12 @@ async def process_document_conv(update, context):
                 await update.message.reply_text(e.__str__())
                 return 17
             return ConversationHandler.END
-        if context.user_data["document_type"] == "agreement":
+        elif context.user_data["document_type"] == "agreement":
             try:
                 await update.message.reply_text("Подождите...")
-                path = await process_statistics_document(update.message.document)
+                path = await process_agreement_document(update.message.document)
                 context.user_data["agreement_path"] = path
-                message = "Файл сохранен " + path+"\nХотите загрузить статистику артиста?"
+                message = f"Файл сохранен {path}\nХотите загрузить статистику артиста?"
 
                 reply_markup = get_menu("create_artist").reply_markup
 

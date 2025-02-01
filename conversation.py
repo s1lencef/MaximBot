@@ -32,7 +32,9 @@ conv_sys_handler = ConversationHandler(
 
         12: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_statistics_main_menu)],
         13: [MessageHandler(filters.TEXT & ~filters.COMMAND, choose_statistics)],
+
         14: [CallbackQueryHandler(btn_handler)],
+
         15: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_agreement_create)],
         16: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_agreement_file_create)],
         17: [MessageHandler(filters.Document.ALL, process_document_conv)]
