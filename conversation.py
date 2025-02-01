@@ -8,12 +8,13 @@ from telegram.ext import (
     filters,
 )
 from admin_commands import *
+from button_handler import btn_handler
 
 conv_sys_handler = ConversationHandler(
     entry_points=[CallbackQueryHandler(btn_handler),
                   MessageHandler(filters.Regex("Поиск треков"), get_artist_name_tracks),
                   MessageHandler(filters.Regex("Статистика"), get_artist_name_stats),
-                  MessageHandler(filters.Regex("Добавить артиста"), get_artist_name_create)
+                  MessageHandler(filters.Regex("Добавить артиста"), get_artist_name_create),
                   ],
     states={
         0: [MessageHandler(filters.TEXT & ~filters.COMMAND, sum_level)],

@@ -3,7 +3,8 @@ import openpyxl
 from models import ArtistModel, Statistics
 
 
-def process(path):
+
+def process(path, artist_name=None):
     obj = openpyxl.load_workbook(path)
 
     sheet = obj.active
@@ -15,11 +16,13 @@ def process(path):
         name_cell = sheet.cell(row=i, column=1).value
         year_cell = sheet.cell(row=i, column=2).value
         first = sheet.cell(row=i, column=3).value
+
+        name = artist_name if artist_name else name_cell
+        print(name)
         try:
-            artist = ArtistModel.get(ArtistModel.name == name_cell)
+            artist = ArtistModel.get(ArtistModel.name == name)
         except Exception:
-            artist = ArtistModel(name=name_cell)
-            artist.save()
+            return "Такого артиста не существует"
 
         print(artist)
         for j in range(1, 5):

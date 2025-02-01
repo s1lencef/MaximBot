@@ -116,14 +116,29 @@ menus = {
             },
         ]
     },
-    "create_artist": {
+    "create_statistics": {
         'type': 'inline',
         'body': [
             {
-                'text': 'Statistics manu',
+                'text': 'Adding statistics to artist',
                 'buttons': [
-                    InlineKeyboardButton('Да', callback_data="artists#create#True"),
-                    InlineKeyboardButton('Нет', callback_data="artists#create#False"),
+                    InlineKeyboardButton('Да', callback_data="artists#statistics#True"),
+                    InlineKeyboardButton('Нет', callback_data="artists#statistics#False"),
+                ],
+                'header': None,
+                'footer': None,
+                'n_cols': 2
+            },
+        ]
+    },
+    "asigne_artist": {
+        'type': 'inline',
+        'body': [
+            {
+                'text': 'Adding user to artist',
+                'buttons': [
+                    InlineKeyboardButton('Да', callback_data="artists#asigne#True"),
+                    InlineKeyboardButton('Нет', callback_data="artists#asigne#False"),
                 ],
                 'header': None,
                 'footer': None,

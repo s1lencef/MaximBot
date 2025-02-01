@@ -19,6 +19,7 @@ from user_commands import *
 from admin_commands import *
 from config import token
 from conversation import *
+from button_handler import btn_handler
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
