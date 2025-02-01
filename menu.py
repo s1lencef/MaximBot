@@ -126,7 +126,7 @@ menus = {
                     InlineKeyboardButton('Нет', callback_data="artists#statistics#False"),
                 ],
                 'header': None,
-                'footer': None,
+                'footer': [InlineKeyboardButton('Отмена', callback_data='cancel')],
                 'n_cols': 2
             },
         ]
@@ -141,7 +141,7 @@ menus = {
                     InlineKeyboardButton('Нет', callback_data="artists#asigne#False"),
                 ],
                 'header': None,
-                'footer': None,
+                'footer': [InlineKeyboardButton('Отмена', callback_data='cancel')],
                 'n_cols': 2
             },
         ]

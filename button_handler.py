@@ -183,11 +183,11 @@ async def btn_handler(update, context):
         else:
             if args[1] == "statistics":
                 if args[2] == "True":
-                    await query.edit_message_text("Отправьте документ в формате .XLSX")
+                    await query.edit_message_text("Отправьте документ в формате .XLSX",reply_markup=cancel_reply_markup)
                     context.user_data["document_type"] = "statistics"
                     return 17
                 else:
-                    await query.edit_message_text(save_artist(context.user_data))
+                    await query.edit_message_text(save_artist(context.user_data),reply_markup=cancel_reply_markup)
                     b = context.user_data["return_statistics"]
                     context.user_data.clear()
                     return ConversationHandler.END
@@ -291,4 +291,4 @@ async def btn_handler(update, context):
 def build_users_list():
     buttons = [InlineKeyboardButton(user.name, callback_data="artists#asigne#" + str(user.id)) for user in
                User.select()]
-    return InlineKeyboardMarkup(build_menu(buttons, n_cols=2))
+    return InlineKeyboardMarkup(build_menu(buttons, n_cols=2, footer_buttons=[InlineKeyboardButton('Отмена', callback_data='cancel')]))
