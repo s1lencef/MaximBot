@@ -42,9 +42,7 @@ menus = {
                 'buttons': [
                     KeyboardButton('📋 Настроить данные приложения'),
                     KeyboardButton("👥 Управлять пользователями"),
-                    KeyboardButton("🎶 Поиск треков"),
-                    KeyboardButton("📊 Статистика"),
-                    KeyboardButton("Добавить артиста")
+                    KeyboardButton("🎼 Работа с артистами"),
                 ],
                 'header': None,
                 'footer': None,
@@ -52,6 +50,25 @@ menus = {
             },
         ]
     },
+    'admin_artist': {
+        'type': 'reply',
+        'body': [
+            {
+                'text': 'Admin Menu',
+                'buttons': [
+                    KeyboardButton("🎶 Поиск треков"),
+                    KeyboardButton("📊 Статистика"),
+                    KeyboardButton("➕ Добавить артиста"),
+                    KeyboardButton('🔙 Назад'),
+                ],
+                'header': None,
+                'footer': None,
+                'n_cols': 1
+            },
+        ]
+    },
+
+
     'user_change_main': {
         'type': 'inline',
         'body': [

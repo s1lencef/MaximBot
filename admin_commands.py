@@ -410,7 +410,7 @@ async def get_artist_name(update, context):
     except Exception as e:
         await update.message.reply_text(e.__str__())
         return ConversationHandler.END
-    await update.message.reply_text("Введите имя артиста", reply_markup= cancel_reply_markup)
+    await update.message.reply_text("Введите имя артиста", reply_markup=cancel_reply_markup)
 
 
 async def get_artist_name_tracks(update, context):
@@ -673,7 +673,7 @@ async def process_document_conv(update, context):
                 b = context.user_data["return_statistics"]
                 context.user_data.clear()
             except Exception as e:
-                await update.message.reply_text(e.__str__(),reply_markup= cancel_reply_markup)
+                await update.message.reply_text(e.__str__(), reply_markup=cancel_reply_markup)
                 return 17
             if b:
                 return 12
@@ -711,10 +711,10 @@ async def get_agreement_create(update, context):
     if update.message.text:
         context.user_data['artist_name'] = update.message.text
     else:
-        await update.message.reply_text("Вы не ввели имя артиста",reply_markup= cancel_reply_markup)
+        await update.message.reply_text("Вы не ввели имя артиста", reply_markup=cancel_reply_markup)
         return ConversationHandler.END
     await update.message.reply_text("Введите номер договора с артистом в формате <code>Х-ХХХ</code>",
-                                    parse_mode=ParseMode.HTML, reply_markup= cancel_reply_markup)
+                                    parse_mode=ParseMode.HTML, reply_markup=cancel_reply_markup)
     return 16
 
 
@@ -722,14 +722,16 @@ async def get_agreement_file_create(update, context):
     if update.message.text:
         agreement = update.message.text
         if not is_valid_format(agreement):
-            await update.message.reply_text("Вы не ввели некорректный номер договора\nПовторите ввод",reply_markup= cancel_reply_markup)
+            await update.message.reply_text("Вы не ввели некорректный номер договора\nПовторите ввод",
+                                            reply_markup=cancel_reply_markup)
             return 15
         context.user_data['agreement'] = agreement
         context.user_data["document_type"] = "agreement"
-        await update.message.reply_text("Отправьте файл договора в формате <b>PDF</b>", parse_mode=ParseMode.HTML,reply_markup= cancel_reply_markup)
+        await update.message.reply_text("Отправьте файл договора в формате <b>PDF</b>", parse_mode=ParseMode.HTML,
+                                        reply_markup=cancel_reply_markup)
         return 17
     else:
-        await update.message.reply_text("Вы не ввели номер договора\nПовторите ввод", reply_markup= cancel_reply_markup)
+        await update.message.reply_text("Вы не ввели номер договора\nПовторите ввод", reply_markup=cancel_reply_markup)
         return 15
 
 
@@ -748,3 +750,11 @@ def save_artist(user_data):
         return e.__str__()
 
     pass
+
+
+async def get_artist_menu(update,context):
+    await update.message.reply_text("Меню обновлено", reply_markup=get_menu("admin_artist").reply_markup)
+
+
+async def get_main_menu(update,context):
+    await update.message.reply_text("Меню обновлено", reply_markup=get_menu("admin_global").reply_markup)

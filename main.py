@@ -68,6 +68,8 @@ def main():
     app.add_handler(MessageHandler(filters.Regex("Управлять пользователями"), call_user_menu))
     app.add_handler(CallbackQueryHandler(reduce_sum))
     app.add_handler(MessageHandler(filters.Regex("Настроить данные приложения"), change_loyalty))
+    app.add_handler(MessageHandler(filters.Regex("Работа с артистами"), get_artist_menu))
+    app.add_handler(MessageHandler(filters.Regex("Назад"), get_main_menu))
     app.add_handler(CommandHandler("get_tracks", get_tracks_command))
     app.add_handler(CommandHandler("get_artist", get_artists_command))
     app.add_handler(CommandHandler("upload_statistics", upload_statistics))
