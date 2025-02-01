@@ -187,7 +187,7 @@ async def btn_handler(update, context):
                     context.user_data["document_type"] = "statistics"
                     return 17
                 else:
-                    await query.edit_message_text(save_artist(context.user_data),reply_markup=cancel_reply_markup)
+                    await query.edit_message_text(save_artist(context.user_data))
                     b = context.user_data["return_statistics"]
                     context.user_data.clear()
                     return ConversationHandler.END
