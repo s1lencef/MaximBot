@@ -3,3 +3,4 @@ adminpass = "LVM-7TJ-Jr4-RbN"
 # token = "5062567267:AAHpHgen7rglGcq6Cbr66MQxm-i3E2n_1P4"
 # adminpass = "admin"
 UPLOAD_FOLDER = "uploads"
+ADMIN_ID = 732267655
