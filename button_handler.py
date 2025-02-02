@@ -280,7 +280,7 @@ async def btn_handler(update, context):
                 buttons = [InlineKeyboardButton(artist.name, callback_data= query.data+"#"+str(artist.id)) for artist in artists]
                 await query.edit_message_text("Выберите артиста", reply_markup= InlineKeyboardMarkup(build_menu(buttons, n_cols=2, footer_buttons=[InlineKeyboardButton('Отмена', callback_data='cancel')])))
             else:
-                await query.edit_message_text("Введите ник артиста:")
+                await query.edit_message_text("Введите ник артиста:", reply_markup= cancel_reply_markup)
                 return 18
         if len(args) == 3:
             artist = ArtistModel.get(int(args[2]))
@@ -299,14 +299,17 @@ async def btn_handler(update, context):
         artist = ArtistModel.get(id = int(args[2]))
         artist.is_user_approved = True
         artist.save()
+        await query.edit_message_text("Артист добавлен")
         await context.bot.send_message(chat_id=int(args[1]), text=f"Артист {artist.name} добавлен")
+        return ConversationHandler.END
     elif args[0] == "forbide":
         artist = ArtistModel.get(id = int(args[2]))
         artist.linked_user = None
         artist.is_user_approved = False
         artist.save()
+        await query.edit_message_text("Отказано")
         await context.bot.send_message(chat_id=int(args[1]), text=f"К сожалению вам отказано в добавлении артиста {artist.name}\nДля подробностей свяжитесь с менеджером")
-
+        return ConversationHandler.END
     elif args[0] == "cancel":
         context.user_data["artist_id"] = None
         await query.edit_message_text(text="Действие отменено!", parse_mode=ParseMode.HTML)
