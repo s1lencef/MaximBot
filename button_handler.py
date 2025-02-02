@@ -15,8 +15,6 @@ from yandex_music_service import *
 from prettytable import PrettyTable, ALL
 from parser import process
 
-cancel_reply_markup = InlineKeyboardMarkup(build_menu([InlineKeyboardButton('Отмена', callback_data='cancel')]))
-
 
 async def btn_handler(update, context):
     query = update.callback_query
@@ -274,6 +272,41 @@ async def btn_handler(update, context):
             await query.edit_message_text(f"Выберите год", reply_markup=InlineKeyboardMarkup(menu))
 
             return 14
+
+    elif args[0] == "user":
+        if len(args) == 2:
+            if  args[1] == "get_agreement" or args[1] == "get_statistics":
+                artists = ArtistModel.select().where(ArtistModel.linked_user == update.effective_user.id, ArtistModel.is_user_approved == True)
+                buttons = [InlineKeyboardButton(artist.name, callback_data= query.data+"#"+str(artist.id)) for artist in artists]
+                await query.edit_message_text("Выберите артиста", reply_markup= InlineKeyboardMarkup(build_menu(buttons, n_cols=2, footer_buttons=[InlineKeyboardButton('Отмена', callback_data='cancel')])))
+            else:
+                await query.edit_message_text("Введите ник артиста:")
+                return 18
+        if len(args) == 3:
+            artist = ArtistModel.get(int(args[2]))
+            if args[1] == "get_agreement":
+                await query.edit_message_text("Подождите...")
+                file_path = artist.agreement_path;
+                if not os.path.exists(file_path):
+                    await query.message.reply_text("Файл не найден.")
+                    return ConversationHandler.END
+                await query.message.reply_document(document=open(file_path, "rb"), filename=f"Договор {artist.agreement} {artist.name}.pdf")
+            elif args[1] == "get_statistics":
+                await query.edit_message_text("Подождите...")
+                await query.edit_message_text(get_statistics(int(args[2])), parse_mode=ParseMode.HTML)
+                return ConversationHandler.END
+    elif args[0] == "permite":
+        artist = ArtistModel.get(id = int(args[2]))
+        artist.is_user_approved = True
+        artist.save()
+        await context.bot.send_message(chat_id=int(args[1]), text=f"Артист {artist.name} добавлен")
+    elif args[0] == "forbide":
+        artist = ArtistModel.get(id = int(args[2]))
+        artist.linked_user = None
+        artist.is_user_approved = False
+        artist.save()
+        await context.bot.send_message(chat_id=int(args[1]), text=f"К сожалению вам отказано в добавлении артиста {artist.name}\nДля подробностей свяжитесь с менеджером")
+
     elif args[0] == "cancel":
         context.user_data["artist_id"] = None
         await query.edit_message_text(text="Действие отменено!", parse_mode=ParseMode.HTML)

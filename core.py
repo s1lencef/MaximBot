@@ -1,9 +1,13 @@
 import telegram
+from prettytable import PrettyTable, ALL
+
 from models import *
 from peewee import DoesNotExist
 from telegram.constants import ParseMode
 from menu import *
 import re
+
+cancel_reply_markup = InlineKeyboardMarkup(build_menu([InlineKeyboardButton('Отмена', callback_data='cancel')]))
 
 def is_valid_format(s):
     pattern = r"^\d-\d{3}$"  # ^ - начало строки, \d - одна цифра, {3} - три цифры, $ - конец строки
@@ -123,3 +127,42 @@ states_names = {
     1: "Предоставлена",
     2: "Выплачено"
 }
+
+def get_statistics(artist_id):
+    statistics = (
+        Statistics
+        .select()
+        .where(Statistics.artist_id == artist_id)
+        .order_by(Statistics.year, Statistics.quarter)
+    )
+
+    if not statistics:  # Если данных нет
+        return "Нет данных для отображения."
+
+    # Создаем таблицу
+    table = PrettyTable()
+    table.field_names = ["Год", "Кв. 1", "Кв. 2", "Кв. 3", "Кв. 4"]
+    table.align = "c"  # Выравнивание по центру
+    table.header = True
+    table.hrules = ALL  # Добавляем горизонтальные линии между строками
+
+    # Устанавливаем одинаковую ширину для всех колонок
+    column_width = 5
+    for field in table.field_names:
+        table.min_width[field] = column_width
+
+    # Группируем данные по годам
+    grouped_statistics = {}
+    for statistic in statistics:
+        year = statistic.year
+        if year not in grouped_statistics:
+            grouped_statistics[year] = ["⚪️"] * 4  # По умолчанию — ⚪️ для каждого квартала
+        grouped_statistics[year][statistic.quarter - 1] = f" {states[statistic.state]} "
+
+    # Заполняем таблицу данными
+    for year, quarters in grouped_statistics.items():
+        table.add_row([year] + quarters)
+
+    # Возвращаем таблицу как строку
+    return f"<pre>{table}</pre>"
+

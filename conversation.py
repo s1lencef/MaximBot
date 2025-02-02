@@ -8,6 +8,7 @@ from telegram.ext import (
     filters,
 )
 from admin_commands import *
+from user_commands import *
 from button_handler import btn_handler
 
 conv_sys_handler = ConversationHandler(
@@ -38,7 +39,10 @@ conv_sys_handler = ConversationHandler(
 
         15: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_agreement_create)],
         16: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_agreement_file_create)],
-        17: [MessageHandler(filters.Document.ALL, process_document_conv)]
+        17: [MessageHandler(filters.Document.ALL, process_document_conv)],
+
+        18: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_user_agreement)],
+        19: [MessageHandler(filters.TEXT & ~filters.COMMAND, send_message_to_admin)]
     },
     fallbacks=[CommandHandler("cancel", cancel), CallbackQueryHandler(btn_handler)],
 )

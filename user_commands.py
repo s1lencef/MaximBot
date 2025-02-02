@@ -6,6 +6,8 @@ from models import *
 from telegram import Update
 from menu import get_menu
 
+from config import ADMIN_ID
+
 @checkuser
 async def start(update,context):
     
@@ -95,17 +97,21 @@ async def get_profile(update,context):
         message = "Сервис сейчас не доступен, попробуйте позже"
         
     else:
-        
+        artists = ArtistModel.select().where(ArtistModel.linked_user == user, ArtistModel.is_user_approved == True)
+        names = [artist.name for artist in artists]
+        names = ", ".join(names) if names else "Нет привязанных артистов"
+
         message = ((
             f"Добро пожаловать,<b>{user.name}</b>\n<i>Ваш баланс:  </i><b>{user.loyalty_points} баллов</b>"
-            f"<i>\nСумма заказов : </i><b>{user.money_paid} руб.</b>"
+            f"<i>\nСумма заказов:  </i><b>{user.money_paid} руб.</b>"
             f"<i>\nУ вас </i> <b>{loyalty.id}</b> <i> уровень лояльности \n</i>"
             f"<i>Коэффициент начисления баллов:  </i><b>{round(loyalty.loyalty_coeff * 100,1)}%</b>\n"
-            f"<i>Ваш ID:</i>  <code>{user.card_id}</code>\n")
-            +how_much(user.loyalty_level.id,user.money_paid))
+            f"<i>Ваш ID:  </i><code>{user.card_id}</code>\n")
+            +how_much(user.loyalty_level.id,user.money_paid)
+            +"\n<i>Привязанные артисты:  </i>" +names)
         
         
-        await update.message.reply_text(message, parse_mode=ParseMode.HTML)
+        await update.message.reply_text(message, parse_mode=ParseMode.HTML,reply_markup= get_menu("user_artists").reply_markup)
 
 
 
@@ -129,6 +135,40 @@ async def cancel(update, context):
 
 async def unknown_text(update,context):
     await update.message.reply_text("Неизвестное действие! Проверьте, что вы не допустили ошибку!")
+
+async def get_user_agreement(update, context):
+    try:
+        artist = ArtistModel.get(name = update.message.text)
+    except Exception:
+        await update.message.reply_text("Такого артиста пока нет в нашей базе")
+        return ConversationHandler.END
+    context.user_data["new_artist_name"] = update.message.text
+    await update.message.reply_text("Введите номер договора в формате <code>X-XXX</code>",reply_markup=cancel_reply_markup, parse_mode=ParseMode.HTML)
+    return 19
+async def send_message_to_admin(update,context):
+    artist = ArtistModel()
+    try:
+        artist = ArtistModel.get(name = context.user_data["new_artist_name"] , agreement = update.message.text)
+        context.user_data["new_artist_agreement"] = update.message.text
+        print(context.user_data)
+        await update.message.reply_text(
+            "Сообщение о вашей регистрации отправилено администратору, ждите, пока он подтвердит вашу личность")
+        context.user_data.clear()
+        artist.linked_user = update.effective_user.id
+        artist.save()
+
+    except Exception as e:
+        print(e)
+        await update.message.reply_text("Проверьте, что правильно указали номер договора и попробуйте еще раз",reply_markup=cancel_reply_markup)
+        return 19
+    user = artist.linked_user
+    message = f"Пользователь {user.username} хочет привязать артиста {artist.name}"
+    reply_markup = InlineKeyboardMarkup(build_menu([InlineKeyboardButton("Разрешить", callback_data=f"permite#{user.id}#{artist.id}"), InlineKeyboardButton("Запретить", callback_data=f"forbide#{user.id}#{artist.id}")], n_cols=2))
+    await context.bot.send_message(chat_id=ADMIN_ID, text=message, reply_markup = reply_markup)
+    return ConversationHandler.END
+
+
+
 
 # async def start_change_name(update,context):
 #     if not(is_user_exist(update.effective_user.id)):
