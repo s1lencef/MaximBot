@@ -13,6 +13,7 @@ from config import ADMIN_ID
 async def start(update, context):
     message = "welcom back"
     reply_markup = get_menu('main_simple').reply_markup
+    context.user_data["reply_markup"] = "main_simple"
     await update.message.reply_text(message, parse_mode=ParseMode.HTML, reply_markup=reply_markup)
 
 
@@ -57,7 +58,7 @@ async def register(update, context):
 
     else:
         message = "Вы уже зарегистрированны!"
-
+    context.user_data["reply_markup"] = "main_simple"
     await update.message.reply_text(message, parse_mode=ParseMode.HTML,
                                     reply_markup=get_menu('main_simple').reply_markup)
 
@@ -76,12 +77,14 @@ async def help_me(update, context):
                    "<b>Или воспользуйтесь кнопками меню</b>\n"
                ))
     help_menu = get_menu('help').reply_markup
+
     await update.message.reply_text(message, parse_mode=ParseMode.HTML, reply_markup=help_menu)
 
 
 @checkuser
 async def call_maxim(update, context):
     help_menu = get_menu('call').reply_markup
+
     await update.message.reply_text('Телеграмм менеджера', parse_mode=ParseMode.HTML, reply_markup=help_menu)
 
 
@@ -118,8 +121,9 @@ async def user(update, context):
     user = User.get(update.effective_user.id)
     user.role = 2
     user.save()
-    menu = get_menu('main')
+    menu = get_menu('main_simple')
     reply_markup = menu.reply_markup
+    context.user_data["reply_markup"] = "main_simple"
     await update.message.reply_text("Просмотр от лица пользователя", parse_mode=ParseMode.HTML,
                                     reply_markup=reply_markup)
 
@@ -128,7 +132,13 @@ async def user(update, context):
 async def cancel(update, context):
     user = update.message.from_user
     logger.info("User %s canceled the conversation.", user.first_name)
-    await update.message.reply_text("Смена имени отменена")
+
+    try:
+        reply_markup = get_menu(context.user_data["reply_markup"]).reply_markup
+    except Exception:
+        reply_markup = None
+
+    await update.message.reply_text("Смена имени отменена", reply_markup=reply_markup)
 
     return ConversationHandler.END
 
@@ -144,6 +154,7 @@ async def get_user_agreement(update, context):
         await update.message.reply_text("Такого артиста пока нет в нашей базе")
         return ConversationHandler.END
     context.user_data["new_artist_name"] = update.message.text
+
     await update.message.reply_text("Введите номер договора в формате <code>X-XXX</code>",
                                     reply_markup=cancel_reply_markup, parse_mode=ParseMode.HTML)
     return 19

@@ -327,9 +327,15 @@ async def btn_handler(update, context):
             context.user_data["update"]
             await query.message.reply_text(text="Меню обновлено", reply_markup=get_menu("admin_global").reply_markup,
                                            parse_mode=ParseMode.HTML)
+            context.user_data["reply_markup"] = "admin_global"
             del context.user_data["update"]
         except Exception:
-            pass
+            try:
+                reply_markup = get_menu(context.user_data["reply_markup"]).reply_markup
+            except Exception:
+                reply_markup = None
+            await update.callback_query.message.reply_text("Меню обновлено", reply_markup=reply_markup)
+            return ConversationHandler.END
 
         return ConversationHandler.END
 

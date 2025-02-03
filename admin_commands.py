@@ -11,7 +11,7 @@ from config import *
 from menu import *
 from core import checkadmin
 from yandex_music_service import *
-
+from telegram import ReplyKeyboardRemove
 from parser import process
 
 cancel_reply_markup = InlineKeyboardMarkup(build_menu([InlineKeyboardButton('Отмена', callback_data='cancel')]))
@@ -38,7 +38,6 @@ async def reg_admin(update, context):
                     user.role = Role.get(1)
                     user.save()
 
-                reply_markup = get_menu('admin_global').reply_markup
             else:
                 if update.effective_user.username:
 
@@ -64,7 +63,7 @@ async def reg_admin(update, context):
                 message = "Вы успешно зарегистрированны в системе"
 
             reply_markup = get_menu('admin_global').reply_markup
-
+            context.user_data["reply_markup"] = "admin_global"
     await update.message.reply_text(message, parse_mode=ParseMode.HTML, reply_markup=reply_markup)
 
 
@@ -85,7 +84,7 @@ async def change_loyalty(update, context):
 
 
 async def sum_level(update, context):
-    cancel_reply_markup = InlineKeyboardMarkup(build_menu([InlineKeyboardButton('Отмена', callback_data='cancel')]))
+
     try:
         context.user_data['level_sum'] = int(update.message.text)
     except Exception as e:
@@ -100,7 +99,6 @@ async def sum_level(update, context):
 
 
 async def coeff_level(update, context):
-    cancel_reply_markup = InlineKeyboardMarkup(build_menu([InlineKeyboardButton('Отмена', callback_data='cancel')]))
     try:
         coeff = int(update.message.text) / 100
     except Exception as e:
@@ -119,7 +117,7 @@ async def coeff_level(update, context):
 
 
 async def edit_sum(update, context):
-    cancel_reply_markup = InlineKeyboardMarkup(build_menu([InlineKeyboardButton('Отмена', callback_data='cancel')]))
+
     level = Loyalty_level.get(int(context.user_data['level_id']))
     try:
         level.sum = int(update.message.text)
@@ -135,7 +133,6 @@ async def edit_sum(update, context):
 
 
 async def edit_coeff(update, context):
-    cancel_reply_markup = InlineKeyboardMarkup(build_menu([InlineKeyboardButton('Отмена', callback_data='cancel')]))
     level = Loyalty_level.get(int(context.user_data['level_id']))
 
     try:
@@ -156,11 +153,11 @@ async def call_user_menu(update, context):
     text = "Выберите действие:"
     menu = get_menu("user_change_main")
     reply_markup = menu.reply_markup
+
     await update.message.reply_text(text=text, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
 
 
 async def change_user(update, context):
-    cancel_reply_markup = InlineKeyboardMarkup(build_menu([InlineKeyboardButton('Отмена', callback_data='cancel')]))
     roles = {1: "Администратор", 2: "Пользователь"}
     levels = Loyalty_level.select()
     try:
@@ -173,8 +170,7 @@ async def change_user(update, context):
         user = User.get(card_id=id)
     except Exception as e:
         await update.message.reply_text("Пользователь с таким id не найден!\nВведите id:", parse_mode=ParseMode.HTML,
-                                        reply_markup=InlineKeyboardMarkup(build_menu(
-                                            [InlineKeyboardButton('Отмена', callback_data='cancel')], 1)))
+                                        reply_markup=cancel_reply_markup)
         return 5
 
     message = (f"Пользователь: {id}\nUsername: {user.username}\nИмя: {user.name}\nРоль: {roles[user.role.id]}"
@@ -215,8 +211,7 @@ async def delete_user(update, context):
     except Exception as e:
         print(e)
         await update.message.reply_text("Пользователь с таким id не найден!\nВведите id:",
-                                        reply_markup=InlineKeyboardMarkup(build_menu(
-                                            [InlineKeyboardButton('Отмена', callback_data='cancel')], 1)))
+                                        reply_markup=cancel_reply_markup)
         return 4
     context.user_data['user_id'] = id
     await update.message.reply_text("Пользователь найден.\nУдалить?", reply_markup=reply_markup)
@@ -354,6 +349,14 @@ async def ban_user(update, context):
 
 async def cancel(update, context):
     await update.message.reply_text("Редактирование отменено")
+    try:
+        reply_markup = get_menu(context.user_data["reply_markup"]).reply_markup
+    except Exception:
+        reply_markup = None
+    try:
+        await update.message.reply_text("Меню обновлено", reply_markup=reply_markup)
+    except Exception:
+        await update.callback_query.message.reply_text("Меню обновлено", reply_markup=reply_markup)
     return ConversationHandler.END
 
 
@@ -410,6 +413,7 @@ async def get_artist_name(update, context):
     except Exception as e:
         await update.message.reply_text(e.__str__())
         return ConversationHandler.END
+    await update.message.reply_text("Закрытие меню", reply_markup=ReplyKeyboardRemove())
     await update.message.reply_text("Введите имя артиста", reply_markup=cancel_reply_markup)
 
 
@@ -527,12 +531,14 @@ async def get_statistics_main_menu(update, context):
         n = ConversationHandler.END
         text = "Завершено."
         reply_markup = get_menu("admin_global").reply_markup
+        context.user_data["reply_markup"] = "admin_global"
     else:
         artist_name = update.message.text
         try:
             artist = ArtistModel.get(ArtistModel.name == artist_name)
             context.user_data["artist_id"] = artist.id
             reply_markup = get_menu('statistics').reply_markup
+            context.user_data["reply_markup"] = "statistics"
             text = "Выберите действие"
             n = 13
         except ArtistModel.DoesNotExist:
@@ -568,6 +574,7 @@ async def choose_statistics(update, context):
             else:
                 context.user_data["artist_id"] = None
                 await update.message.reply_text(text="Завершено", reply_markup=get_menu('admin_global').reply_markup)
+                context.user_data["reply_markup"] = "admin_global"
                 return ConversationHandler.END
     except KeyError:
         context.user_data["artist_id"] = None
@@ -579,11 +586,13 @@ async def choose_statistics(update, context):
                 await update.message.reply_text(
                     "Работа со статистикой завершена. Повторите команду",
                     reply_markup=get_menu('admin_global').reply_markup, parse_mode=ParseMode.HTML)
+                context.user_data["reply_markup"] = "admin_global"
                 return ConversationHandler.END
         else:
             await update.message.reply_text("Работа со статистикой завершена. Повторите команду",
                                             reply_markup=get_menu('admin_global').reply_markup,
                                             parse_mode=ParseMode.HTML)
+            context.user_data["reply_markup"] = "admin_global"
             return ConversationHandler.END
 
 
@@ -717,8 +726,10 @@ def save_artist(user_data):
 
 
 async def get_artist_menu(update,context):
+    context.user_data["reply_markup"] = "admin_artist"
     await update.message.reply_text("Меню обновлено", reply_markup=get_menu("admin_artist").reply_markup)
 
 
 async def get_main_menu(update,context):
+    context.user_data["reply_markup"] = "admin_global"
     await update.message.reply_text("Меню обновлено", reply_markup=get_menu("admin_global").reply_markup)
