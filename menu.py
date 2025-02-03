@@ -42,7 +42,7 @@ menus = {
                 'buttons': [
                     KeyboardButton('📋 Настроить данные приложения'),
                     KeyboardButton("👥 Управлять пользователями"),
-                    KeyboardButton("🎼 Работа с артистами"),
+                    KeyboardButton("🎹 Работа с артистами"),
                 ],
                 'header': None,
                 'footer': None,
@@ -56,10 +56,10 @@ menus = {
             {
                 'text': 'Admin Menu',
                 'buttons': [
-                    KeyboardButton("🎶 Поиск треков"),
+                    KeyboardButton("🎵 Поиск треков"),
                     KeyboardButton("📊 Статистика"),
                     KeyboardButton("➕ Добавить артиста"),
-                    KeyboardButton('🔙 Назад'),
+                    KeyboardButton('↩️ Назад'),
                 ],
                 'header': None,
                 'footer': None,

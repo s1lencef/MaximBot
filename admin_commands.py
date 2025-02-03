@@ -545,7 +545,7 @@ async def get_statistics_main_menu(update, context):
             reply_markup = InlineKeyboardMarkup(build_menu([
                 InlineKeyboardButton("Да", callback_data="statistics#create#" + artist_name),
                 InlineKeyboardButton("Нет", callback_data="statistics#create#cancel"),
-            ], n_cols=2))
+            ], n_cols=2,footer_buttons=[InlineKeyboardButton('Отмена', callback_data='cancel')]))
 
             text = "Артист не найден в базе.\nСоздать нового артиста?"
             n = 14
