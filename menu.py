@@ -56,14 +56,14 @@ menus = {
             {
                 'text': 'Admin Menu',
                 'buttons': [
-                    KeyboardButton("🎵 Поиск треков"),
+                    KeyboardButton("🔍 Поиск треков"),
                     KeyboardButton("📊 Статистика"),
-                    KeyboardButton("➕ Добавить артиста"),
-                    KeyboardButton('↩️ Назад'),
+                    KeyboardButton("🎤 Добавить артиста"),
+                    KeyboardButton("📃 Список артистов"),
                 ],
                 'header': None,
-                'footer': None,
-                'n_cols': 1
+                'footer': [KeyboardButton('↩️ Назад'),],
+                'n_cols': 2
             },
         ]
     },

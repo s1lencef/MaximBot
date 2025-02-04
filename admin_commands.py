@@ -84,7 +84,6 @@ async def change_loyalty(update, context):
 
 
 async def sum_level(update, context):
-
     try:
         context.user_data['level_sum'] = int(update.message.text)
     except Exception as e:
@@ -117,7 +116,6 @@ async def coeff_level(update, context):
 
 
 async def edit_sum(update, context):
-
     level = Loyalty_level.get(int(context.user_data['level_id']))
     try:
         level.sum = int(update.message.text)
@@ -545,7 +543,7 @@ async def get_statistics_main_menu(update, context):
             reply_markup = InlineKeyboardMarkup(build_menu([
                 InlineKeyboardButton("Да", callback_data="statistics#create#" + artist_name),
                 InlineKeyboardButton("Нет", callback_data="statistics#create#cancel"),
-            ], n_cols=2,footer_buttons=[InlineKeyboardButton('Отмена', callback_data='cancel')]))
+            ], n_cols=2, footer_buttons=[InlineKeyboardButton('Отмена', callback_data='cancel')]))
 
             text = "Артист не найден в базе.\nСоздать нового артиста?"
             n = 14
@@ -594,9 +592,6 @@ async def choose_statistics(update, context):
                                             parse_mode=ParseMode.HTML)
             context.user_data["reply_markup"] = "admin_global"
             return ConversationHandler.END
-
-
-
 
 
 async def upload_statistics(update, context):
@@ -725,11 +720,20 @@ def save_artist(user_data):
     pass
 
 
-async def get_artist_menu(update,context):
+async def get_artist_menu(update, context):
     context.user_data["reply_markup"] = "admin_artist"
     await update.message.reply_text("Меню обновлено", reply_markup=get_menu("admin_artist").reply_markup)
 
 
-async def get_main_menu(update,context):
+async def get_main_menu(update, context):
     context.user_data["reply_markup"] = "admin_global"
     await update.message.reply_text("Меню обновлено", reply_markup=get_menu("admin_global").reply_markup)
+
+
+@checkadmin
+async def get_artists_list(update, context):
+    artists = ArtistModel.select()
+    message = "<b>Артисты</b>\n"
+    for artist in artists:
+        message += f"    <code>{artist.name}</code> — {artist.agreement}\n"
+    await update.message.reply_text(message, parse_mode=ParseMode.HTML)
