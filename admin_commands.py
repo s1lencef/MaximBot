@@ -660,7 +660,8 @@ async def process_document_conv(update, context):
                 context.user_data["document_type"] = None
                 return 14
             except Exception as e:
-                await update.message.reply_text(e.__str__())
+                print(e)
+                await update.message.reply_text(e.__str__()+" Отправьте файл в формате pdf")
                 return 17
     except Exception as e:
         await update.message.reply_text(e.__str__())
@@ -668,11 +669,13 @@ async def process_document_conv(update, context):
 
 async def process_agreement_document(document):
     if not document.file_name.endswith(".pdf"):
-        raise RuntimeError("Пожалуйста, отправьте файл в формате PDF.")
+        raise RuntimeError("Неправильный формат файла")
     file_path = os.path.join(UPLOAD_FOLDER, document.file_name)
     new_file = await document.get_file()
     await new_file.download_to_drive(file_path)
     return file_path
+
+
 
 
 async def get_agreement_create(update, context):
