@@ -735,5 +735,10 @@ async def get_artists_list(update, context):
     artists = ArtistModel.select()
     message = "<b>Артисты</b>\n"
     for artist in artists:
-        message += f"    <code>{artist.name}</code> — {artist.agreement}\n"
+        message += f"    <b><code>{artist.name}</code></b>\n        <i>Договор: </i>{artist.agreement}\n"
+        if artist.linked_user:
+            message+=f"        <i>Пользователь TG: </i> @{artist.linked_user.username}\n"
+        else:
+            message+=f"        <i>Пользователь TG: </i> Отсутствует\n"
+
     await update.message.reply_text(message, parse_mode=ParseMode.HTML)
