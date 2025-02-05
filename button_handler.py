@@ -187,7 +187,12 @@ async def btn_handler(update, context):
                     return 17
                 else:
                     await query.edit_message_text(save_artist(context.user_data))
-                    b = context.user_data["return_statistics"]
+                    try:
+                        print(context.user_data["reply_markup"])
+                        await query.message.reply_text("Меню обновлено", reply_markup=get_menu(
+                            context.user_data["reply_markup"]).reply_markup)
+                    except Exception as e:
+                        print(e)
                     context.user_data.clear()
                     return ConversationHandler.END
                 print(context.user_data)

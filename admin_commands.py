@@ -1,3 +1,4 @@
+import aiohttp
 from black import nullcontext
 from pyexpat.errors import messages
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -416,17 +417,20 @@ async def get_artist_name(update, context):
 
 
 async def get_artist_name_tracks(update, context):
+    context.user_data["reply_markup"] = 'admin_artist'
     await get_artist_name(update, context)
     return 11
 
 
 async def get_artist_name_stats(update, context):
+    context.user_data["reply_markup"] = 'admin_artist'
     await get_artist_name(update, context)
     return 12
 
 
 async def get_artist_name_create(update, context):
     context.user_data["return_statistics"] = False
+    context.user_data["reply_markup"] = 'admin_artist'
     await get_artist_name(update, context)
     return 15
 
@@ -507,11 +511,16 @@ async def get_artist_query(query, artist_name):
 
 
 async def get_artists_conv(update, context):
-    if update.message.text:
+    try:
+        await update.message.reply_text("Меню обновлено", reply_markup= get_menu(context.user_data["reply_markup"]).reply_markup)
+    except Exception as e:
+        print(e)
 
+    if update.message.text:
         await get_artist(update, update.message.text)
     else:
         await update.message.reply_text("Вы не ввели имя артиста")
+
     return ConversationHandler.END
 
 
@@ -639,18 +648,25 @@ async def process_document_conv(update, context):
                                                                     context.user_data["artist_name"])
                 await update.message.reply_text(message)
                 b = context.user_data["return_statistics"]
-                context.user_data.clear()
             except Exception as e:
                 await update.message.reply_text(e.__str__(), reply_markup=cancel_reply_markup)
                 return 17
             if b:
+                context.user_data.clear()
                 return 12
             else:
+                try:
+                    print(context.user_data["reply_markup"])
+                    await update.message.reply_text("Меню обновлено", reply_markup=get_menu(
+                        context.user_data["reply_markup"]).reply_markup)
+                except Exception as e:
+                    print(e)
+                context.user_data.clear()
                 return ConversationHandler.END
         elif context.user_data["document_type"] == "agreement":
             try:
                 await update.message.reply_text("Подождите...")
-                path = await process_agreement_document(update.message.document)
+                path = await process_agreement_document(context,update.message.document)
                 context.user_data["agreement_path"] = path
                 message = f"Файл сохранен {path}\nХотите привязать пользователя к артисту?"
 
@@ -667,12 +683,23 @@ async def process_document_conv(update, context):
         await update.message.reply_text(e.__str__())
 
 
-async def process_agreement_document(document):
+async def process_agreement_document(context, document):
     if not document.file_name.endswith(".pdf"):
         raise RuntimeError("Неправильный формат файла")
-    file_path = os.path.join(UPLOAD_FOLDER, document.file_name)
-    new_file = await document.get_file()
-    await new_file.download_to_drive(file_path)
+    try:
+        file_id = document.file_id
+        new_file = await context.bot.get_file(file_id)
+        file_url = new_file.file_path
+
+        file_path = os.path.join(UPLOAD_FOLDER, document.file_name)
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(file_url) as response:
+                if response.status == 200:
+                    with open(file_path, "wb") as f:
+                        f.write(await response.read())
+    except Exception as e:
+        return e.__str__()
     return file_path
 
 
@@ -695,7 +722,7 @@ async def get_agreement_file_create(update, context):
         if not is_valid_format(agreement):
             await update.message.reply_text("Вы не ввели некорректный номер договора\nПовторите ввод",
                                             reply_markup=cancel_reply_markup)
-            return 15
+            return 16
         context.user_data['agreement'] = agreement
         context.user_data["document_type"] = "agreement"
         await update.message.reply_text("Отправьте файл договора в формате <b>PDF</b>", parse_mode=ParseMode.HTML,
@@ -703,7 +730,7 @@ async def get_agreement_file_create(update, context):
         return 17
     else:
         await update.message.reply_text("Вы не ввели номер договора\nПовторите ввод", reply_markup=cancel_reply_markup)
-        return 15
+        return 16
 
 
 def save_artist(user_data):
