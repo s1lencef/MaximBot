@@ -753,11 +753,12 @@ def save_artist(user_data):
 async def get_artist_menu(update, context):
     context.user_data["reply_markup"] = "admin_artist"
     await update.message.reply_text("Меню обновлено", reply_markup=get_menu("admin_artist").reply_markup)
-
+    return ConversationHandler.END
 
 async def get_main_menu(update, context):
     context.user_data["reply_markup"] = "admin_global"
     await update.message.reply_text("Меню обновлено", reply_markup=get_menu("admin_global").reply_markup)
+    return ConversationHandler.END
 
 
 @checkadmin
