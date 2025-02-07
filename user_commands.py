@@ -1,3 +1,4 @@
+import os
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, ContextTypes, ConversationHandler
 from telegram.constants import ParseMode
@@ -185,4 +186,70 @@ async def send_message_to_admin(update, context):
     await context.bot.send_message(chat_id=ADMIN_ID, text=message, reply_markup=reply_markup)
     return ConversationHandler.END
 
+
+async def get_artist_name_user_create(update, context):
+    await update("Введите ник артиста:", reply_markup=cancel_reply_markup)
+    return 18
+
+
+async def get_user_statistics(update, context):
+    if context.args:
+        if context.args[0]:
+
+            artist_name = context.args[0]
+            if len(context.args) > 1:
+                artist_name = " ".join(context.args)
+            try:
+                artist = ArtistModel.get(name=artist_name)
+            except Exception:
+                await update.message.reply_text("Такой артист не найден")
+                return ConversationHandler.END
+
+            if artist.linked_user.id == update.effective_user.id and artist.is_user_approved:
+                pass
+            else:
+                await update.message.reply_text("Этот артист не привязан к вашем аккаунту")
+                return ConversationHandler.END
+
+            await update.message.reply_text("Подождите...")
+            await update.message.reply_text(get_statistics(artist.id), parse_mode=ParseMode.HTML)
+        else:
+            await update.message.reply_text("Вы не ввели ник артиста")
+    else:
+        await update.message.reply_text("Вы не ввели ник артиста")
+
+    return ConversationHandler.END
+
+
+async def get_user_agreement(update, context):
+    if context.args:
+        if context.args[0]:
+            artist_name = context.args[0]
+            if len(context.args)>1:
+                artist_name = " ".join(context.args)
+
+            print(artist_name)
+            try:
+                artist = ArtistModel.get(name=artist_name)
+            except Exception :
+                await update.message.reply_text("Такой артист не найден")
+                return ConversationHandler.END
+
+            if artist.linked_user and artist.linked_user.id == update.effective_user.id and artist.is_user_approved:
+                pass
+            else:
+                await update.message.reply_text("Этот артист не привязан к вашему аккаунту")
+                return ConversationHandler.END
+
+            await update.message.reply_text("Загружаем документ, подождите ...(это может занять до 30 секунд)")
+            file_path = artist.agreement_path
+            if not os.path.exists(file_path):
+                await update.message.reply_text("Файл не найден.")
+                return ConversationHandler.END
+            await update.message.reply_document(document=open(file_path, "rb"),
+                                                filename=f"Договор {artist.agreement} {artist.name}.pdf")
+        else:
+            await update.message.reply_text("Вы не ввели ник артиста")
+    else:
+        await update.message.reply_text("Вы не ввели ник артиста")
 

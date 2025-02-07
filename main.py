@@ -60,6 +60,12 @@ def main():
     app.add_handler(CommandHandler("profile", get_profile))
     app.add_handler(MessageHandler(filters.Regex("Профиль"), get_profile))
     app.add_handler(MessageHandler(filters.Regex("Связаться с менеджером"), call_maxim))
+    app.add_handler(CommandHandler("manager", call_maxim))
+    app.add_handler(CommandHandler("agreement", get_user_agreement))
+    app.add_handler(CommandHandler("statistics", get_user_statistics))
+    app.add_handler(CommandHandler("add_artist", get_artist_name_user_create))
+
+
     app.add_handler(conv_sys_handler)
 
     app.add_handler(CommandHandler("admin", reg_admin))

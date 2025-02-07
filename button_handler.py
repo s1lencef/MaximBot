@@ -353,3 +353,4 @@ def build_users_list():
                User.select()]
     return InlineKeyboardMarkup(
         build_menu(buttons, n_cols=2, footer_buttons=[InlineKeyboardButton('Отмена', callback_data='cancel')]))
+
