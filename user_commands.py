@@ -185,29 +185,4 @@ async def send_message_to_admin(update, context):
     await context.bot.send_message(chat_id=ADMIN_ID, text=message, reply_markup=reply_markup)
     return ConversationHandler.END
 
-# async def start_change_name(update,context):
-#     if not(is_user_exist(update.effective_user.id)):
-#         await update.message.reply_text("Сначала зарегистрируйтесь!")
-#         return ConversationHandler.END
-#     await update.message.reply_text("Как к вам обращаться?")
-#     print(0)
-#     print(update.message.text)
-#     return 1
-#
-# async def change_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     try:
-#         user = User.get(id=update.effective_user.id)
-#     except Exception as e:
-#         print(e)
-#         message = "Сервис сейчас не доступен, попробуйте позже"
-#     else:
-#         new_name = update.message.text
-#         if new_name == "":
-#             message = "Имя не может быть пустым"
-#         else:
-#             user.name = new_name
-#             user.save()
-#             message = f"Имя успешно изменено на {new_name}"
-#     await update.message.reply_text(message, parse_mode=ParseMode.HTML)
-#
-#     return ConversationHandler.END
+

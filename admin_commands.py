@@ -5,6 +5,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, ContextTypes, ConversationHandler
 from telegram.constants import ParseMode
 import os
+
 import user_commands
 from core import *
 from models import *
@@ -512,7 +513,8 @@ async def get_artist_query(query, artist_name):
 
 async def get_artists_conv(update, context):
     try:
-        await update.message.reply_text("Меню обновлено", reply_markup= get_menu(context.user_data["reply_markup"]).reply_markup)
+        await update.message.reply_text("Меню обновлено",
+                                        reply_markup=get_menu(context.user_data["reply_markup"]).reply_markup)
     except Exception as e:
         print(e)
 
@@ -643,10 +645,11 @@ async def process_document_conv(update, context):
         elif context.user_data["document_type"] == "statistics":
             try:
                 await update.message.reply_text("Подождите...")
-                message = save_artist(context.user_data)
+                message = await save_artist(context)
                 message += "\n" + await process_statistics_document(update.message.document,
                                                                     context.user_data["artist_name"])
                 await update.message.reply_text(message)
+
                 b = context.user_data["return_statistics"]
             except Exception as e:
                 await update.message.reply_text(e.__str__(), reply_markup=cancel_reply_markup)
@@ -666,7 +669,7 @@ async def process_document_conv(update, context):
         elif context.user_data["document_type"] == "agreement":
             try:
                 await update.message.reply_text("Подождите...")
-                path = await process_agreement_document(context,update.message.document)
+                path = await process_agreement_document(context, update.message.document)
                 context.user_data["agreement_path"] = path
                 message = f"Файл сохранен {path}\nХотите привязать пользователя к артисту?"
 
@@ -677,7 +680,7 @@ async def process_document_conv(update, context):
                 return 14
             except Exception as e:
                 print(e)
-                await update.message.reply_text(e.__str__()+" Отправьте файл в формате pdf")
+                await update.message.reply_text(e.__str__() + " Отправьте файл в формате pdf")
                 return 17
     except Exception as e:
         await update.message.reply_text(e.__str__())
@@ -701,8 +704,6 @@ async def process_agreement_document(context, document):
     except Exception as e:
         return e.__str__()
     return file_path
-
-
 
 
 async def get_agreement_create(update, context):
@@ -733,7 +734,8 @@ async def get_agreement_file_create(update, context):
         return 16
 
 
-def save_artist(user_data):
+async def save_artist(context):
+    user_data = context.user_data
     pprint(user_data)
     artist = ArtistModel(name=user_data["artist_name"], agreement=user_data["agreement"],
                          agreement_path=user_data["agreement_path"])
@@ -743,7 +745,13 @@ def save_artist(user_data):
 
     try:
         artist.save()
-        return "Артист успешно добавлен!"
+        if artist.linked_user:
+            await context.bot.send_message(chat_id=artist.linked_user.id,
+                                           text=f"К вашему аккаунту добавлен артист {artist.name}",
+                                           parse_mode=ParseMode.HTML)
+            return f"Артист {artist.name}успешно добавлен и связан с пользователем @{artist.linked_user.username}"
+        else:
+            return f"Артист {artist.name}успешно добавлен"
     except Exception as e:
         return e.__str__()
 
@@ -754,6 +762,7 @@ async def get_artist_menu(update, context):
     context.user_data["reply_markup"] = "admin_artist"
     await update.message.reply_text("Меню обновлено", reply_markup=get_menu("admin_artist").reply_markup)
     return ConversationHandler.END
+
 
 async def get_main_menu(update, context):
     context.user_data["reply_markup"] = "admin_global"
@@ -768,8 +777,30 @@ async def get_artists_list(update, context):
     for artist in artists:
         message += f"    <b><code>{artist.name}</code></b>\n        <i>Договор: </i>{artist.agreement}\n"
         if artist.linked_user:
-            message+=f"        <i>Пользователь TG: </i> @{artist.linked_user.username}\n"
+            message += f"        <i>Пользователь TG: </i> @{artist.linked_user.username}\n"
         else:
-            message+=f"        <i>Пользователь TG: </i> Отсутствует\n"
+            message += f"        <i>Пользователь TG: </i> Отсутствует\n"
 
     await update.message.reply_text(message, parse_mode=ParseMode.HTML)
+
+
+async def get_linked_user(update, context):
+    try:
+        if "@" in update.message.text:
+            username = str(update.message.text)[1:len(update.message.text)]
+
+        print(username)
+        user = User.get(username=username)
+    except Exception:
+        try:
+            user = User.get(card_id=int(update.message.text))
+        except Exception:
+            await update.message.reply_text("Такой пользователь не найден, повторите попытку ввода",
+                                            reply_markup=cancel_reply_markup)
+            return 20
+
+    context.user_data["asigned_user"] = user.id
+
+    await update.message.reply_text("Хотите отправить данные о статистике?",
+                                    reply_markup=get_menu("create_statistics").reply_markup)
+    return 14

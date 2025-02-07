@@ -171,8 +171,8 @@ async def btn_handler(update, context):
             else:
                 text = text + f"Всего найдено: {len(users)}\n\n"
                 for user in users:
-                    text += f"    {user.username} - <code>{user.card_id}</code>\n"
-                await query.edit_message_text(text=text, parse_mode=ParseMode.HTML)
+                    text += f"    {user.username} - <code>{user.card_id}</code>/<code>{user.username}</code>\n"
+                await query.edit_message_text(text=text, parse_mode=ParseMode.HTML, reply_markup=cancel_reply_markup)
                 return 5
     elif args[0] == "artists":
         if args[2] == "back":
@@ -186,20 +186,23 @@ async def btn_handler(update, context):
                     context.user_data["document_type"] = "statistics"
                     return 17
                 else:
-                    await query.edit_message_text(save_artist(context.user_data))
+                    await query.edit_message_text(await save_artist(context))
                     try:
                         print(context.user_data["reply_markup"])
+                        fill_statistics(context.user_data["artist_name"])
                         await query.message.reply_text("Меню обновлено", reply_markup=get_menu(
                             context.user_data["reply_markup"]).reply_markup)
                     except Exception as e:
                         print(e)
+
+
                     context.user_data.clear()
                     return ConversationHandler.END
                 print(context.user_data)
             elif args[1] == "asigne":
                 if args[2] == "True":
-                    await query.edit_message_text("Выберите пользователя из списка", reply_markup=build_users_list())
-                    return 17
+                    await query.edit_message_text("Введите id пользователя или username в телеграм",)
+                    return 20
                 elif args[2] == "False":
                     context.user_data["asigned_user"] = None
                     await query.edit_message_text("Хотите отправить данные о статистике?",
@@ -298,7 +301,7 @@ async def btn_handler(update, context):
         if len(args) == 3:
             artist = ArtistModel.get(int(args[2]))
             if args[1] == "get_agreement":
-                await query.edit_message_text("Подождите...")
+                await query.edit_message_text("Загружаем документ, подождите ...(это может занять до 30 секунд)")
                 file_path = artist.agreement_path;
                 if not os.path.exists(file_path):
                     await query.message.reply_text("Файл не найден.")

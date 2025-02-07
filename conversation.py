@@ -42,7 +42,8 @@ conv_sys_handler = ConversationHandler(
         17: [MessageHandler(filters.Document.ALL, process_document_conv)],
 
         18: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_user_agreement)],
-        19: [MessageHandler(filters.TEXT & ~filters.COMMAND, send_message_to_admin)]
+        19: [MessageHandler(filters.TEXT & ~filters.COMMAND, send_message_to_admin)],
+        20: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_linked_user)],
     },
     fallbacks=[CommandHandler("cancel", cancel), CallbackQueryHandler(btn_handler)],
 )
