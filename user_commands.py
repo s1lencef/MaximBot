@@ -66,20 +66,8 @@ async def register(update, context):
 
 @checkuser
 async def help_me(update, context):
-    message = ((
-                   "Вас приветствует <b>PhantomTrackBot</b>!\n\n<i>Здесь вы можете принять участие в программе лояльности PhantomTrack.\n"
-                   "За покупки вам будут</i> <b>начисляться баллы</b>, "
-                   "<i>которыми можно будет оплачивать последующие заказы.\n<b>1 балл = 1 рубль.</b>\n\n"
-                   "В боте вы сможете ознакомиться с </i><b>условиями проведения программы лояльности</b><i> и</i> <b>количеством баллов</b>, "
-                   "<i>которые имеются на вашем аккаунте.</i>\n\n") + write_loyalty() + (
-                   "<b>\nСписок доступных команд:</b>\n"
-                   "    ⧫<code>/register</code> - Зарегистрироваться в системе\n"
-                   "    ⧫<code>/profile</code> - Посмотреть свой профиль\n\n"
-                   "<b>Или воспользуйтесь кнопками меню</b>\n"
-               ))
     help_menu = get_menu('help').reply_markup
-
-    await update.message.reply_text(message, parse_mode=ParseMode.HTML, reply_markup=help_menu)
+    await update.message.reply_text(help_message, parse_mode=ParseMode.HTML, reply_markup=help_menu)
 
 
 @checkuser

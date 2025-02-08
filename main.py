@@ -65,7 +65,6 @@ def main():
     app.add_handler(CommandHandler("statistics", get_user_statistics))
     app.add_handler(CommandHandler("add_artist", get_artist_name_user_create))
 
-
     app.add_handler(conv_sys_handler)
 
     app.add_handler(CommandHandler("admin", reg_admin))

@@ -312,6 +312,16 @@ async def btn_handler(update, context):
                 await query.edit_message_text("Подождите...")
                 await query.edit_message_text(get_statistics(int(args[2])), parse_mode=ParseMode.HTML)
                 return ConversationHandler.END
+            elif args[1] == "help":
+                if args[2] == "back":
+                    help_menu = get_menu('help').reply_markup
+                    await query.edit_message_text(help_message, parse_mode=ParseMode.HTML, reply_markup=help_menu)
+                elif args[2] == "loyalty":
+                    help_menu = get_menu('help_back').reply_markup
+                    await query.edit_message_text(help_lolyalty_message, parse_mode=ParseMode.HTML, reply_markup=help_menu)
+                elif args[2] == "loyalty":
+                    help_menu = get_menu('help_back').reply_markup
+                    await query.edit_message_text(help_statistics_message, parse_mode=ParseMode.HTML, reply_markup=help_menu)
     elif args[0] == "permite":
         artist = ArtistModel.get(id=int(args[2]))
         artist.is_user_approved = True

@@ -106,12 +106,30 @@ menus = {
             {
                 'text': 'Call Maxim Lukin',
                 'buttons': [
+                    InlineKeyboardButton("Программа лояльности", callback_data="user#help#loyalty"),
+                    InlineKeyboardButton("Артистам издательства", callback_data="user#help#statistics"),
+
+                ],
+                'header': None,
+                'footer': [
                     InlineKeyboardButton("Группа Вк", url="https://vk.com/fantomtrack"),
                     InlineKeyboardButton("Открыть чат с менеджером", url="https://t.me/PhantomTrack"),
 
                 ],
+                'n_cols': 2
+            },
+        ]
+    },
+    'help_back': {
+        'type': 'inline',
+        'body': [
+            {
+                'text': 'Call Maxim Lukin',
+                'buttons': None,
                 'header': None,
-                'footer': None,
+                'footer': [
+                    InlineKeyboardButton("<", callback_data="user#help#back")
+                ],
                 'n_cols': 1
             },
         ]
