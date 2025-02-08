@@ -169,7 +169,7 @@ menus = {
             {
                 'text': 'Adding user to artist',
                 'buttons': [
-                    InlineKeyboardButton('Получить договор', callback_data="user#get_agreement"),
+                    InlineKeyboardButton('Показать договор', callback_data="user#get_agreement"),
                     InlineKeyboardButton('Показать статистику', callback_data="user#get_statistics"),
                     InlineKeyboardButton('Привязать артиста', callback_data="user#add_artist"),
                 ],

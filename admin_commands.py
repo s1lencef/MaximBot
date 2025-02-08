@@ -669,14 +669,18 @@ async def process_document_conv(update, context):
         elif context.user_data["document_type"] == "agreement":
             try:
                 await update.message.reply_text("Подождите...")
-                path = await process_agreement_document(context, update.message.document)
-                context.user_data["agreement_path"] = path
-                message = f"Файл сохранен {path}\nХотите привязать пользователя к артисту?"
+                try:
+                    path = await process_agreement_document(context, update.message.document)
+                    context.user_data["agreement_path"] = path
+                    message = f"Файл сохранен {path}\nХотите привязать пользователя к артисту?"
 
-                reply_markup = get_menu("asigne_artist").reply_markup
+                    reply_markup = get_menu("asigne_artist").reply_markup
 
-                await update.message.reply_text(message, reply_markup=reply_markup, )
-                context.user_data["document_type"] = None
+                    await update.message.reply_text(message, reply_markup=reply_markup, )
+                    context.user_data["document_type"] = None
+                except Exception as e:
+                    await update.message.reply_text(e.__str__()+"\повторите отправку файла", reply_markup=cancel_reply_markup, )
+                    return 17
                 return 14
             except Exception as e:
                 print(e)
@@ -689,20 +693,19 @@ async def process_document_conv(update, context):
 async def process_agreement_document(context, document):
     if not document.file_name.endswith(".pdf"):
         raise RuntimeError("Неправильный формат файла")
-    try:
-        file_id = document.file_id
-        new_file = await context.bot.get_file(file_id)
-        file_url = new_file.file_path
 
-        file_path = os.path.join(UPLOAD_FOLDER, document.file_name)
+    file_id = document.file_id
+    new_file = await context.bot.get_file(file_id)
+    file_url = new_file.file_path
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(file_url) as response:
-                if response.status == 200:
-                    with open(file_path, "wb") as f:
-                        f.write(await response.read())
-    except Exception as e:
-        return e.__str__()
+    file_path = os.path.join(UPLOAD_FOLDER, document.file_name)
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(file_url) as response:
+            if response.status == 200:
+                with open(file_path, "wb") as f:
+                    f.write(await response.read())
+
     return file_path
 
 
@@ -749,9 +752,9 @@ async def save_artist(context):
             await context.bot.send_message(chat_id=artist.linked_user.id,
                                            text=f"К вашему аккаунту добавлен артист {artist.name}",
                                            parse_mode=ParseMode.HTML)
-            return f"Артист {artist.name}успешно добавлен и связан с пользователем @{artist.linked_user.username}"
+            return f"Артист {artist.name} успешно добавлен и связан с пользователем @{artist.linked_user.username}"
         else:
-            return f"Артист {artist.name}успешно добавлен"
+            return f"Артист {artist.name} успешно добавлен"
     except Exception as e:
         return e.__str__()
 
@@ -772,7 +775,7 @@ async def get_main_menu(update, context):
 
 @checkadmin
 async def get_artists_list(update, context):
-    artists = ArtistModel.select()
+    artists = ArtistModel.select().order_by(ArtistModel.name)
     message = "<b>Артисты</b>\n"
     for artist in artists:
         message += f"    <b><code>{artist.name}</code></b>\n        <i>Договор: </i>{artist.agreement}\n"

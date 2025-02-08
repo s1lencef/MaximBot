@@ -123,9 +123,9 @@ states = {
     2: "🟢"
 }
 states_names = {
-    0: "Нет действий",
-    1: "Предоставлена",
-    2: "Выплачено"
+    0: "Статистика не предоставлена",
+    1: "Статистика предоставлена",
+    2: "Роялти выплачены"
 }
 
 def get_statistics(artist_id):
@@ -162,9 +162,11 @@ def get_statistics(artist_id):
     # Заполняем таблицу данными
     for year, quarters in grouped_statistics.items():
         table.add_row([year] + quarters)
-
+    answ = f"<pre>{table}</pre>\n\n"
+    for k in states_names.keys():
+        answ+=f"    {states[k]}—{states_names[k]}\n\n"
     # Возвращаем таблицу как строку
-    return f"<pre>{table}</pre>"
+    return answ
 
 def fill_statistics(artist_name):
     artist = ArtistModel.get(name = artist_name)

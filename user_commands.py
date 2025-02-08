@@ -177,7 +177,7 @@ async def send_message_to_admin(update, context):
         return 19
 
     await update.message.reply_text(
-        "Сообщение о вашей регистрации отправилено администратору, ждите, пока он подтвердит вашу личность")
+        "Заявка на привязку артиста отправлена на согласование администратору.")
     user1 = artist.linked_user
     message = f"Пользователь {user1.username} хочет привязать артиста {artist.name}"
     reply_markup = InlineKeyboardMarkup(build_menu(
