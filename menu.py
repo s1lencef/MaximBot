@@ -125,11 +125,11 @@ menus = {
         'body': [
             {
                 'text': 'Call Maxim Lukin',
-                'buttons': None,
-                'header': None,
-                'footer': [
+                'buttons': [
                     InlineKeyboardButton("<", callback_data="user#help#back")
                 ],
+                'header': None,
+                'footer':None ,
                 'n_cols': 1
             },
         ]

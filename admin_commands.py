@@ -14,7 +14,7 @@ from menu import *
 from core import checkadmin
 from yandex_music_service import *
 from telegram import ReplyKeyboardRemove
-from parser import process
+from excel_parser import process
 
 cancel_reply_markup = InlineKeyboardMarkup(build_menu([InlineKeyboardButton('Отмена', callback_data='cancel')]))
 

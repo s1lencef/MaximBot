@@ -113,7 +113,7 @@ def write_loyalty():
     levels = Loyalty_level.select()
     text = "<b>Уровни лояльности:</b>\n"
     for level in levels:
-        text += f"<b>{level.id} уровень</b>\n    Cумма для достижения: {level.sum}руб\n    {round(level.loyalty_coeff * 100, 1)}% начисляются баллами\n"
+        text += f"<b>{level.id} уровень</b>\n    Cумма для достижения: {level.sum}руб\n    {int(round(level.loyalty_coeff * 100, 1))}% начисляются баллами\n"
     return text
 
 
@@ -177,7 +177,7 @@ def fill_statistics(artist_name):
 
 
 help_message = (f"Вас приветствует <b>PhantomTrackBot!</b>\n\n"
-               f"В этом боте вы можете копить баллы за заказы и использовать их для оплаты следующих заказов."
+               f"В этом боте вы можете копить баллы за заказы и использовать их для оплаты следующих заказов.\n"
                f"Если вы артист издательства <b>PhantomTrack</b>, вам доступны дополнительные функции:\n"
                f"    ⧫ Просмотр статистики выплат по релизам\n"
                f"    ⧫ Просмотр условий заключенного договора.\n\n"

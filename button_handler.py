@@ -13,7 +13,7 @@ from menu import *
 from core import checkadmin
 from yandex_music_service import *
 from prettytable import PrettyTable, ALL
-from parser import process
+from excel_parser import process
 
 
 async def btn_handler(update, context):
@@ -299,10 +299,11 @@ async def btn_handler(update, context):
                 await query.edit_message_text("Введите ник артиста:", reply_markup=cancel_reply_markup)
                 return 18
         if len(args) == 3:
-            artist = ArtistModel.get(int(args[2]))
+
             if args[1] == "get_agreement":
+                artist = ArtistModel.get(int(args[2]))
                 await query.edit_message_text("Загружаем документ, подождите ...(это может занять до 30 секунд)")
-                file_path = artist.agreement_path;
+                file_path = artist.agreement_path
                 if not os.path.exists(file_path):
                     await query.message.reply_text("Файл не найден.")
                     return ConversationHandler.END
@@ -319,7 +320,7 @@ async def btn_handler(update, context):
                 elif args[2] == "loyalty":
                     help_menu = get_menu('help_back').reply_markup
                     await query.edit_message_text(help_lolyalty_message, parse_mode=ParseMode.HTML, reply_markup=help_menu)
-                elif args[2] == "loyalty":
+                elif args[2] == "statistics":
                     help_menu = get_menu('help_back').reply_markup
                     await query.edit_message_text(help_statistics_message, parse_mode=ParseMode.HTML, reply_markup=help_menu)
     elif args[0] == "permite":
