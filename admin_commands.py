@@ -604,13 +604,21 @@ async def choose_statistics(update, context):
             context.user_data["reply_markup"] = "admin_global"
             return ConversationHandler.END
 
-
+@checkadmin
 async def upload_statistics(update, context):
     context.user_data["document_type"] = "statistics"
     await update.message.reply_text("Пожалуйста, отправьте XLSX файл с данными")
 
 
 async def process_document(update, context):
+    try:
+        user = User.get(id = int(update.effective_user.id))
+        if user.role.id != 1:
+            await update.message.reply_text("Я не знаю что сделать с этим файлом!")
+            return
+    except Exception:
+        await update.message.reply_text("Я не знаю что сделать с этим файлом!")
+        return
     try:
         if not context.user_data["document_type"]:
             await update.message.reply_text("Я не знаю что сделать с этим файлом!")
