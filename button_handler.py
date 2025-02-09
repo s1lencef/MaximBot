@@ -277,7 +277,7 @@ async def btn_handler(update, context):
             return 14
         else:
             menu = build_menu([InlineKeyboardButton(year, callback_data="statistics#" + str(year)) for year in
-                               range(2020, datetime.now().year + 1)], n_cols=4)
+                               range(2022, datetime.now().year + 1)], n_cols=4)
             await query.edit_message_text(f"Выберите год", reply_markup=InlineKeyboardMarkup(menu))
 
             return 14

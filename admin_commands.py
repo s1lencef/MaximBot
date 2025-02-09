@@ -574,7 +574,7 @@ async def choose_statistics(update, context):
                 return 13
             elif "Внести данные о статистике" in update.message.text:
                 menu = build_menu([InlineKeyboardButton(year, callback_data="statistics#" + str(year)) for year in
-                                   range(2020, datetime.now().year + 1)], n_cols=4)
+                                   range(2022, datetime.now().year + 1)], n_cols=4)
                 await update.message.reply_text(f"Выберите год", reply_markup=InlineKeyboardMarkup(menu))
             elif 'Другой артист' in update.message.text or "Статистика" in update.message.text:
                 context.user_data["artist_id"] = None
