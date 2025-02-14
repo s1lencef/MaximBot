@@ -9,9 +9,11 @@ import re
 
 cancel_reply_markup = InlineKeyboardMarkup(build_menu([InlineKeyboardButton('Отмена', callback_data='cancel')]))
 
+
 def is_valid_format(s):
     pattern = r"^\d-\d{3}$"  # ^ - начало строки, \d - одна цифра, {3} - три цифры, $ - конец строки
     return bool(re.fullmatch(pattern, s))
+
 
 class DoesNotExist(Exception):
     def __int__(self, text="User Not Found"):
@@ -128,11 +130,13 @@ states_names = {
     2: "Роялти выплачены"
 }
 
+
 def get_statistics(artist_id):
+    start_year = ArtistModel.get(id=artist_id).start_year
     statistics = (
         Statistics
         .select()
-        .where(Statistics.artist_id == artist_id)
+        .where(Statistics.artist_id == artist_id, Statistics.year >= start_year)
         .order_by(Statistics.year, Statistics.quarter)
     )
 
@@ -164,35 +168,37 @@ def get_statistics(artist_id):
         table.add_row([year] + quarters)
     answ = f"<pre>{table}</pre>\n\n"
     for k in states_names.keys():
-        answ+=f"    {states[k]}—{states_names[k]}\n\n"
+        answ += f"    {states[k]}—{states_names[k]}\n\n"
     # Возвращаем таблицу как строку
     return answ
 
+
 def fill_statistics(artist_name):
-    artist = ArtistModel.get(name = artist_name)
-    for i in range(2022, datetime.now().year+1):
+    artist = ArtistModel.get(name=artist_name)
+    for i in range(artist.start_year, datetime.now().year + 1):
         for j in range(1, 5):
             staistics = Statistics(artist_id=artist.id, year=i, quarter=j, state=0)
             staistics.save()
 
 
 help_message = (f"Вас приветствует <b>PhantomTrackBot!</b>\n\n"
-               f"В этом боте вы можете копить баллы за заказы и использовать их для оплаты следующих заказов.\n"
-               f"Если вы артист издательства <b>PhantomTrack</b>, вам доступны дополнительные функции:\n"
-               f"    ⧫ Просмотр статистики выплат по релизам\n"
-               f"    ⧫ Просмотр условий заключенного договора.\n\n"
-               f"Подробнее о каждом разделе вы можете узнать ниже — выберите нужную опцию с помощью кнопок.\n\n"
-               f"<b>Список базовых команд:</b>\n"
-               f"    ⧫<code>/register</code> - Зарегистрироваться в системе\n    ⧫<code>/profile</code> - Посмотреть свой профиль"
+                f"В этом боте вы можете копить баллы за заказы и использовать их для оплаты следующих заказов.\n"
+                f"Если вы артист издательства <b>PhantomTrack</b>, вам доступны дополнительные функции:\n"
+                f"    ⧫ Просмотр статистики выплат по релизам\n"
+                f"    ⧫ Просмотр условий заключенного договора.\n\n"
+                f"Подробнее о каждом разделе вы можете узнать ниже — выберите нужную опцию с помощью кнопок.\n\n"
+                f"<b>Список базовых команд:</b>\n"
+                f"    ⧫<code>/register</code> - Зарегистрироваться в системе\n    ⧫<code>/profile</code> - Посмотреть свой профиль"
                 f"\n    ⧫<code>/help</code> - Помощь\n    ⧫<code>/manager</code> - Связаться с менеджером\n\n"
-               f"<b>Или воспользуйтесь кнопками меню</b>")
+                f"<b>Или воспользуйтесь кнопками меню</b>")
 
-help_lolyalty_message = (f"За заказы в PhantomTrack вам будут <b>начисляться баллы</b>, которыми можно будет оплачивать последующие заказы.\n"
-                         f"<b>1 балл = 1 рубль.</b>\n\n"
-                         f"{write_loyalty()}\n\n"
-                         f"<b>Список доступных команд:</b>\n    ⧫<code>/profile</code> - Посмотреть свой профиль\n\n<b>Или воспользуйтесь кнопками меню</b>"
+help_lolyalty_message = (
+    f"За заказы в PhantomTrack вам будут <b>начисляться баллы</b>, которыми можно будет оплачивать последующие заказы.\n"
+    f"<b>1 балл = 1 рубль.</b>\n\n"
+    f"{write_loyalty()}\n\n"
+    f"<b>Список доступных команд:</b>\n    ⧫<code>/profile</code> - Посмотреть свой профиль\n\n<b>Или воспользуйтесь кнопками меню</b>"
 
-)
+    )
 
 help_statistics_message = (f"В этом боте вы можете привязать один или несколько псевдонимов, "
                            f"которые связаны с вашим договором с издательством <b>PhantomTrack</b>.\n\n"

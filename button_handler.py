@@ -180,6 +180,8 @@ async def btn_handler(update, context):
             return ConversationHandler.END
         else:
             if args[1] == "statistics":
+                if args[2] == "change_year":
+                    context
                 if args[2] == "True":
                     await query.edit_message_text("Отправьте документ в формате .XLSX",
                                                   reply_markup=cancel_reply_markup)
@@ -195,12 +197,11 @@ async def btn_handler(update, context):
                     except Exception as e:
                         print(e)
 
-
                     context.user_data.clear()
                     return ConversationHandler.END
             elif args[1] == "asigne":
                 if args[2] == "True":
-                    await query.edit_message_text("Введите id пользователя или username в телеграм",)
+                    await query.edit_message_text("Введите id пользователя или username в телеграм", )
                     return 20
                 elif args[2] == "False":
                     context.user_data["asigned_user"] = None
@@ -231,13 +232,23 @@ async def btn_handler(update, context):
     elif args[0] == "statistics":
         print(context.user_data)
         if len(args) == 4:
-            statistics = Statistics(artist_id=int(context.user_data["artist_id"]), year=int(args[1]),
-                                    quarter=int(args[2]), state=int(args[3]))
-            statistics.save()
-            await query.edit_message_text(
-                text=f"Добавлена информация \n Артист: <i>{statistics.artist_id.name}</i>\n Год: <i>{statistics.year}</i>\n Квартал: <i>{statistics.quarter}</i>\n Статус: <i>{states_names[statistics.state]}</i>",
-                parse_mode=ParseMode.HTML)
-            return 13
+            if args[1] == "change_year":
+                try:
+                    artist = ArtistModel.get(id = int(args[2]))
+                except Exception:
+                    await query.edit_message_text(f"Чета сломалась")
+                    return ConversationHandler.END
+                artist.start_year = int(args[3])
+                artist.save()
+                await query.edit_message_text(f"Год обновлен")
+            else:
+                statistics = Statistics(artist_id=int(context.user_data["artist_id"]), year=int(args[1]),
+                                        quarter=int(args[2]), state=int(args[3]))
+                statistics.save()
+                await query.edit_message_text(
+                    text=f"Добавлена информация \n Артист: <i>{statistics.artist_id.name}</i>\n Год: <i>{statistics.year}</i>\n Квартал: <i>{statistics.quarter}</i>\n Статус: <i>{states_names[statistics.state]}</i>",
+                    parse_mode=ParseMode.HTML)
+                return 13
         elif len(args) == 3:
             if args[1] == "create":
                 if args[2] == "cancel":
@@ -256,12 +267,19 @@ async def btn_handler(update, context):
                     await query.message.reply_text("Введите номер договора с артистом в формате <code>Х-ХХХ</code>",
                                                    parse_mode=ParseMode.HTML)
                     return 16
+            elif args[1] == "change_year":
+                menu = build_menu([InlineKeyboardButton(str(year), callback_data=f"statistics#change_year#{args[2]}#{year}") for year in
+                                   range(2020, datetime.now().year + 1)],
+                                  footer_buttons=[InlineKeyboardButton('Отмена', callback_data='cancel')],
+                                  n_cols=4)
+                await query.edit_message_text(f"Выберите стартовый год", reply_markup=InlineKeyboardMarkup(menu))
             else:
                 buttons = [InlineKeyboardButton(states_names[i], callback_data=query.data + "#" + str(i)) for i in
                            range(0, 3)]
                 print(query.data)
                 menu = build_menu(buttons, n_cols=3,
-                                  footer_buttons=[InlineKeyboardButton("Назад", callback_data=args[0] + "#" + args[1]),InlineKeyboardButton('Отмена', callback_data='cancel')])
+                                  footer_buttons=[InlineKeyboardButton("Назад", callback_data=args[0] + "#" + args[1]),
+                                                  InlineKeyboardButton('Отмена', callback_data='cancel')])
 
                 await query.edit_message_text(text="Статус квартала", parse_mode=ParseMode.HTML,
                                               reply_markup=InlineKeyboardMarkup(menu))
@@ -270,13 +288,22 @@ async def btn_handler(update, context):
         elif len(args) == 2:
             buttons = [InlineKeyboardButton(f"Квартал {i}", callback_data=query.data + "#" + str(i)) for i in
                        range(1, 5)]
-            menu = build_menu(buttons, n_cols=4, footer_buttons=[InlineKeyboardButton("Назад", callback_data=args[0]),InlineKeyboardButton('Отмена', callback_data='cancel')])
+            menu = build_menu(buttons, n_cols=4, footer_buttons=[InlineKeyboardButton("Назад", callback_data=args[0]),
+                                                                 InlineKeyboardButton('Отмена',
+                                                                                      callback_data='cancel')])
             await query.edit_message_text(text="Выберите квартал", parse_mode=ParseMode.HTML,
                                           reply_markup=InlineKeyboardMarkup(menu))
             return 14
         else:
+            try:
+                artist = ArtistModel.get(id=int(context.user_data["artist_id"]))
+                start_year = artist.start_year
+            except Exception as e:
+                print(e)
+                start_year = 2020
             menu = build_menu([InlineKeyboardButton(str(year), callback_data="statistics#" + str(year)) for year in
-                               range(2022, datetime.now().year + 1)],footer_buttons = [InlineKeyboardButton('Отмена', callback_data='cancel')], n_cols=4)
+                               range(start_year, datetime.now().year + 1)],
+                              footer_buttons=[InlineKeyboardButton('Отмена', callback_data='cancel')], n_cols=4)
             await query.edit_message_text(f"Выберите год", reply_markup=InlineKeyboardMarkup(menu))
 
             return 14
@@ -318,10 +345,12 @@ async def btn_handler(update, context):
                     await query.edit_message_text(help_message, parse_mode=ParseMode.HTML, reply_markup=help_menu)
                 elif args[2] == "loyalty":
                     help_menu = get_menu('help_back').reply_markup
-                    await query.edit_message_text(help_lolyalty_message, parse_mode=ParseMode.HTML, reply_markup=help_menu)
+                    await query.edit_message_text(help_lolyalty_message, parse_mode=ParseMode.HTML,
+                                                  reply_markup=help_menu)
                 elif args[2] == "statistics":
                     help_menu = get_menu('help_back').reply_markup
-                    await query.edit_message_text(help_statistics_message, parse_mode=ParseMode.HTML, reply_markup=help_menu)
+                    await query.edit_message_text(help_statistics_message, parse_mode=ParseMode.HTML,
+                                                  reply_markup=help_menu)
     elif args[0] == "permite":
         artist = ArtistModel.get(id=int(args[2]))
         artist.is_user_approved = True
@@ -363,4 +392,3 @@ def build_users_list():
                User.select()]
     return InlineKeyboardMarkup(
         build_menu(buttons, n_cols=2, footer_buttons=[InlineKeyboardButton('Отмена', callback_data='cancel')]))
-

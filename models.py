@@ -38,6 +38,7 @@ class ArtistModel(BaseModel):
     agreement_path = CharField(null=False)
     is_user_approved = BooleanField(default=False)
     linked_user = ForeignKeyField(User, null=True, on_update='cascade')
+    start_year = IntegerField(default=2020, null=False)
 
 
 class Statistics(BaseModel):

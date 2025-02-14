@@ -573,8 +573,17 @@ async def choose_statistics(update, context):
                 await update.message.reply_text(get_statistics(int(artist_id)), parse_mode=ParseMode.HTML)
                 return 13
             elif "Внести данные о статистике" in update.message.text:
+
+                try:
+                    artist = ArtistModel.get(id = int(artist_id))
+                    start_year = artist.start_year
+                except Exception as e:
+                    print(e)
+                    start_year = 2020
                 menu = build_menu([InlineKeyboardButton(str(year), callback_data="statistics#" + str(year)) for year in
-                                   range(2022, datetime.now().year + 1)],footer_buttons = [InlineKeyboardButton('Отмена', callback_data='cancel')], n_cols=4)
+                                   range(start_year, datetime.now().year + 1)],footer_buttons = [InlineKeyboardButton('Отмена', callback_data='cancel')],
+                                  header_buttons=[InlineKeyboardButton("Изменить год начала отслеживания статистики", callback_data=f"statistics#change_year#{artist_id}")],
+                                  n_cols=4)
                 await update.message.reply_text(f"Выберите год", reply_markup=InlineKeyboardMarkup(menu))
             elif 'Другой артист' in update.message.text or "Статистика" in update.message.text:
                 context.user_data["artist_id"] = None
