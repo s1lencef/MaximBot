@@ -198,7 +198,6 @@ async def btn_handler(update, context):
 
                     context.user_data.clear()
                     return ConversationHandler.END
-                print(context.user_data)
             elif args[1] == "asigne":
                 if args[2] == "True":
                     await query.edit_message_text("Введите id пользователя или username в телеграм",)
@@ -262,7 +261,7 @@ async def btn_handler(update, context):
                            range(0, 3)]
                 print(query.data)
                 menu = build_menu(buttons, n_cols=3,
-                                  footer_buttons=[InlineKeyboardButton("Назад", callback_data=args[0] + "#" + args[1])])
+                                  footer_buttons=[InlineKeyboardButton("Назад", callback_data=args[0] + "#" + args[1]),InlineKeyboardButton('Отмена', callback_data='cancel')])
 
                 await query.edit_message_text(text="Статус квартала", parse_mode=ParseMode.HTML,
                                               reply_markup=InlineKeyboardMarkup(menu))
@@ -271,13 +270,13 @@ async def btn_handler(update, context):
         elif len(args) == 2:
             buttons = [InlineKeyboardButton(f"Квартал {i}", callback_data=query.data + "#" + str(i)) for i in
                        range(1, 5)]
-            menu = build_menu(buttons, n_cols=4, footer_buttons=[InlineKeyboardButton("Назад", callback_data=args[0])])
+            menu = build_menu(buttons, n_cols=4, footer_buttons=[InlineKeyboardButton("Назад", callback_data=args[0]),InlineKeyboardButton('Отмена', callback_data='cancel')])
             await query.edit_message_text(text="Выберите квартал", parse_mode=ParseMode.HTML,
                                           reply_markup=InlineKeyboardMarkup(menu))
             return 14
         else:
-            menu = build_menu([InlineKeyboardButton(year, callback_data="statistics#" + str(year)) for year in
-                               range(2022, datetime.now().year + 1)], n_cols=4)
+            menu = build_menu([InlineKeyboardButton(str(year), callback_data="statistics#" + str(year)) for year in
+                               range(2022, datetime.now().year + 1)],footer_buttons = [InlineKeyboardButton('Отмена', callback_data='cancel')], n_cols=4)
             await query.edit_message_text(f"Выберите год", reply_markup=InlineKeyboardMarkup(menu))
 
             return 14
