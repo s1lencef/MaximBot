@@ -197,6 +197,21 @@ menus = {
             },
         ]
     },
+    "change_start_year": {
+        'type': 'inline',
+        'body': [
+            {
+                'text': 'Хотите задать год начала отсчета статистики?\nГод по умолчанию: <b>2023</b>',
+                'buttons': [
+                    InlineKeyboardButton('Да', callback_data="artists#change_year#True"),
+                    InlineKeyboardButton('Нет', callback_data="artists#change_year#False"),
+                ],
+                'header': None,
+                'footer': [InlineKeyboardButton('Отмена', callback_data='cancel')],
+                'n_cols': 2
+            },
+        ]
+    },
 
 }
 
