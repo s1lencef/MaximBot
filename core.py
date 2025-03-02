@@ -175,7 +175,7 @@ def get_statistics(artist_id):
 
 def fill_statistics(artist_name):
     artist = ArtistModel.get(name=artist_name)
-    for i in range(artist.start_year, datetime.now().year + 1):
+    for i in range(2020, datetime.now().year + 1):
         for j in range(1, 5):
             staistics = Statistics(artist_id=artist.id, year=i, quarter=j, state=0)
             staistics.save()

@@ -180,8 +180,6 @@ async def btn_handler(update, context):
             return ConversationHandler.END
         else:
             if args[1] == "statistics":
-                if args[2] == "change_year":
-                    context
                 if args[2] == "True":
                     await query.edit_message_text("Отправьте документ в формате .XLSX",
                                                   reply_markup=cancel_reply_markup)
@@ -212,6 +210,27 @@ async def btn_handler(update, context):
                     context.user_data["asigned_user"] = args[2]
                     await query.edit_message_text("Хотите отправить данные о статистике?",
                                                   reply_markup=get_menu("create_statistics").reply_markup)
+                    return 14
+            elif args[1] == "change_year":
+                if args[2] == "True":
+                    menu = build_menu(
+                        [InlineKeyboardButton(str(year), callback_data=f"artists#change_year#{year}") for
+                         year in
+                         range(2020, datetime.now().year + 1)],
+                        footer_buttons=[InlineKeyboardButton('Отмена', callback_data='cancel')],
+                        n_cols=4)
+                    await query.edit_message_text("Укажите год начала отсчета статистики", reply_markup=InlineKeyboardMarkup(menu))
+                    return 14
+                elif args[2] == "False":
+                    context.user_data["year"] = None
+                    await query.edit_message_text("Хотите привязать пользователя телеграм?",
+                                                  reply_markup=get_menu("asigne_artist").reply_markup)
+                    return 14
+                else:
+                    print("chnage_year")
+                    context.user_data["year"] = args[2]
+                    await query.edit_message_text("Хотите привязать пользователя телеграм?",
+                                                  reply_markup=get_menu("asigne_artist").reply_markup)
                     return 14
 
             else:

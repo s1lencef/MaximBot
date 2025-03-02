@@ -689,11 +689,14 @@ async def process_document_conv(update, context):
                 try:
                     path = await process_agreement_document(context, update.message.document)
                     context.user_data["agreement_path"] = path
-                    message = f"Файл сохранен {path}\nХотите привязать пользователя к артисту?"
+                    message = f"Файл сохранен {path}\n"
 
-                    reply_markup = get_menu("asigne_artist").reply_markup
 
-                    await update.message.reply_text(message, reply_markup=reply_markup, )
+                    menu = get_menu("change_start_year")
+                    reply_markup = menu.reply_markup
+                    message+=menu.text
+
+                    await update.message.reply_text(message, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
                     context.user_data["document_type"] = None
                 except Exception as e:
                     await update.message.reply_text(e.__str__()+"\повторите отправку файла", reply_markup=cancel_reply_markup, )
@@ -757,8 +760,12 @@ async def get_agreement_file_create(update, context):
 async def save_artist(context):
     user_data = context.user_data
     pprint(user_data)
+    start_year = 2023
+    if context.user_data["year"]:
+        start_year = int(context.user_data["year"])
+
     artist = ArtistModel(name=user_data["artist_name"], agreement=user_data["agreement"],
-                         agreement_path=user_data["agreement_path"])
+                         agreement_path=user_data["agreement_path"],start_year = start_year)
     if user_data["asigned_user"]:
         artist.is_user_approved = True
         artist.linked_user = User.get(int(user_data["asigned_user"]))
@@ -824,3 +831,4 @@ async def get_linked_user(update, context):
     await update.message.reply_text("Хотите отправить данные о статистике?",
                                     reply_markup=get_menu("create_statistics").reply_markup)
     return 14
+
