@@ -565,7 +565,7 @@ async def get_statistics_main_menu(update, context):
 
 async def choose_statistics(update, context):
     print(update.message.text)
-
+    context.user_data["reply_markup"] = "statistics"
     try:
         if context.user_data["artist_id"]:
             artist_id = context.user_data["artist_id"]
@@ -584,6 +584,7 @@ async def choose_statistics(update, context):
                                    range(start_year, datetime.now().year + 1)],footer_buttons = [InlineKeyboardButton('Отмена', callback_data='cancel')],
                                   header_buttons=[InlineKeyboardButton("Изменить год начала отслеживания статистики", callback_data=f"statistics#change_year#{artist_id}")],
                                   n_cols=4)
+                await update.message.reply_text(f"Закрытие меню ", reply_markup=ReplyKeyboardRemove())
                 await update.message.reply_text(f"Выберите год", reply_markup=InlineKeyboardMarkup(menu))
             elif 'Другой артист' in update.message.text or "Статистика" in update.message.text:
                 context.user_data["artist_id"] = None
