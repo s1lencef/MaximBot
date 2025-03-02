@@ -234,7 +234,7 @@ async def btn_handler(update, context):
         if len(args) == 4:
             if args[1] == "change_year":
                 try:
-                    artist = ArtistModel.get(id = int(args[2]))
+                    artist = ArtistModel.get(id=int(args[2]))
                 except Exception:
                     await query.edit_message_text(f"Чета сломалась")
                     return ConversationHandler.END
@@ -268,10 +268,12 @@ async def btn_handler(update, context):
                                                    parse_mode=ParseMode.HTML)
                     return 16
             elif args[1] == "change_year":
-                menu = build_menu([InlineKeyboardButton(str(year), callback_data=f"statistics#change_year#{args[2]}#{year}") for year in
-                                   range(2020, datetime.now().year + 1)],
-                                  footer_buttons=[InlineKeyboardButton('Отмена', callback_data='cancel')],
-                                  n_cols=4)
+                menu = build_menu(
+                    [InlineKeyboardButton(str(year), callback_data=f"statistics#change_year#{args[2]}#{year}") for year
+                     in
+                     range(2020, datetime.now().year + 1)],
+                    footer_buttons=[InlineKeyboardButton('Отмена', callback_data='cancel')],
+                    n_cols=4)
                 await query.edit_message_text(f"Выберите стартовый год", reply_markup=InlineKeyboardMarkup(menu))
             else:
                 buttons = [InlineKeyboardButton(states_names[i], callback_data=query.data + "#" + str(i)) for i in
@@ -368,23 +370,37 @@ async def btn_handler(update, context):
                                        text=f"К сожалению вам отказано в добавлении артиста {artist.name}\nДля подробностей свяжитесь с менеджером")
         return ConversationHandler.END
     elif args[0] == "cancel":
+        artist = None
+        try:
+            artist = context.user_data["artist_id"]
+        except Exception:
+            pass
         context.user_data["artist_id"] = None
         await query.edit_message_text(text="Действие отменено!", parse_mode=ParseMode.HTML)
+        n = ConversationHandler.END
         try:
             context.user_data["update"]
             await query.message.reply_text(text="Меню обновлено", reply_markup=get_menu("admin_global").reply_markup,
                                            parse_mode=ParseMode.HTML)
             context.user_data["reply_markup"] = "admin_global"
             del context.user_data["update"]
+
         except Exception:
             try:
                 reply_markup = get_menu(context.user_data["reply_markup"]).reply_markup
+                if context.user_data["reply_markup"] == "statistics":
+                    if artist:
+                        context.user_data["artist_id"] = artist
+                        n = 13
+                    else:
+                        reply_markup = get_menu("admin_global").reply_markup
+                        n = ConversationHandler.END
             except Exception:
                 reply_markup = None
-            await update.callback_query.message.reply_text("Меню обновлено", reply_markup=reply_markup)
-            return ConversationHandler.END
 
-        return ConversationHandler.END
+            await update.callback_query.message.reply_text("Меню обновлено", reply_markup=reply_markup)
+
+        return n
 
 
 def build_users_list():
