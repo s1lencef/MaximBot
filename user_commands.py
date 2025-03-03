@@ -140,8 +140,8 @@ async def get_user_agreement4add(update, context):
     try:
         artist = ArtistModel.get(name=update.message.text)
     except Exception:
-        await update.message.reply_text("Такого артиста пока нет в нашей базе")
-        return ConversationHandler.END
+        await update.message.reply_text("Такого артиста пока нет в нашей базе",reply_markup=cancel_reply_markup)
+        return 19
     context.user_data["new_artist_name"] = update.message.text
 
     await update.message.reply_text("Введите номер договора в формате <code>X-XXX</code>",
