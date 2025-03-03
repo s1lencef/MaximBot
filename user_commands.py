@@ -120,7 +120,6 @@ async def user(update, context):
 @checkuser
 async def cancel(update, context):
     user = update.message.from_user
-    logger.info("User %s canceled the conversation.", user.first_name)
 
     try:
         reply_markup = get_menu(context.user_data["reply_markup"]).reply_markup
@@ -136,7 +135,8 @@ async def unknown_text(update, context):
     await update.message.reply_text("Неизвестное действие! Проверьте, что вы не допустили ошибку!")
 
 
-async def get_user_agreement(update, context):
+async def get_user_agreement4add(update, context):
+    print("agreement " + update.message.text)
     try:
         artist = ArtistModel.get(name=update.message.text)
     except Exception:

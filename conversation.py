@@ -41,7 +41,7 @@ conv_sys_handler = ConversationHandler(
         16: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_agreement_file_create)],
         17: [MessageHandler(filters.Document.ALL, process_document_conv)],
 
-        18: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_user_agreement)],
+        18: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_user_agreement4add)],
         19: [MessageHandler(filters.TEXT & ~filters.COMMAND, send_message_to_admin)],
         20: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_linked_user)],
     },
