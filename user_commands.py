@@ -138,7 +138,7 @@ async def unknown_text(update, context):
 async def get_user_agreement4add(update, context):
     print("agreement " + update.message.text)
     try:
-        artist = ArtistModel.get(name=update.message.text)
+        artist = ArtistModel.get(ArtistModel.name==update.message.text)
     except Exception:
         await update.message.reply_text("Такого артиста пока нет в нашей базе",reply_markup=cancel_reply_markup)
         return 19
@@ -152,7 +152,7 @@ async def get_user_agreement4add(update, context):
 async def send_message_to_admin(update, context):
     artist = ArtistModel()
     try:
-        artist = ArtistModel.get(name=context.user_data["new_artist_name"], agreement=update.message.text)
+        artist = ArtistModel.get(ArtistModel.name==context.user_data["new_artist_name"], ArtistModel.agreement==update.message.text)
         context.user_data["new_artist_agreement"] = update.message.text
         print(context.user_data)
         context.user_data.clear()
